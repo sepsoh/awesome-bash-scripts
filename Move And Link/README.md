@@ -10,3 +10,5 @@ mal old/path new/path/
 mal old/file new/path/
 
 ```
+
+The mal function works like mv command.
