@@ -3,6 +3,6 @@
 ## Usage
 ```
 chmod +x shecan.sh
-./shecan stop
-./shecan start
+./shecan.sh stop
+./shecan.sh start
 ```
