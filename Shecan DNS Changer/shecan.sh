@@ -9,7 +9,6 @@ if [ "$1" = "start" ]; then
   # Add the two DNS servers to resolv.conf
   echo "nameserver 178.22.122.100" | sudo tee /etc/resolv.conf > /dev/null
   echo "nameserver 185.51.200.2" | sudo tee -a /etc/resolv.conf > /dev/null
-  # Restart the NetworkManager service 
   echo "Successfully shecan started."
 elif [ "$1" = "stop" ]; then
   # Restore the original resolv.conf file
