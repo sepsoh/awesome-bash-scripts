@@ -7,10 +7,9 @@ if [ "$1" = "start" ]; then
   # Backup the original resolv.conf file
   sudo cp /etc/resolv.conf /etc/resolv.conf.shecan.bak
   # Add the two DNS servers to resolv.conf
-  sudo sh -c 'echo "nameserver 178.22.122.100" > /etc/resolv.conf'
-  sudo sh -c 'echo "nameserver 185.51.200.2" >> /etc/resolv.conf'
-  # Restart the NetworkManager service
-  sudo systemctl restart NetworkManager
+  echo "nameserver 178.22.122.100" | sudo tee /etc/resolv.conf > /dev/null
+  echo "nameserver 185.51.200.2" | sudo tee -a /etc/resolv.conf > /dev/null
+  # Restart the NetworkManager service 
   echo "Successfully shecan started."
 elif [ "$1" = "stop" ]; then
   # Restore the original resolv.conf file
