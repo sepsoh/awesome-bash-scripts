@@ -1,4 +1,7 @@
 #!/bin/bash
+# See More github.com/sepsoh/awesome-bash-scripts
+
+
 
 # Function to terminate the background processes
 function cleanup() {
