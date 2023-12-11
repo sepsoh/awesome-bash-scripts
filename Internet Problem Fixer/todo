@@ -1,0 +1,19 @@
+Hello, we want to write a complete script that will automatically check and solve the internet problem in Linux.
+
+My opinion is that this process should be done step by step and each step should be checked to see if the internet problem is fixed or not.
+
+
+
+My opinion is that we should use this road map. If you have a more complete or better method, please add it to this list.
+
++ The problem may be with the browser, so first we get a ping from a reliable site.
++ The user may have turned on the VPN and the VPN does not work.
++ The problem may be with the routing table.
++ The problem may be with the DNS, (fix : testing a reliable DNS)
++ The problem may be with the firewall (fix : disabele firewall and check again)
++ & ...
+
+
+
+
+The fixer.sh script should be as simple as possible, we don't want to make anything complicated.
