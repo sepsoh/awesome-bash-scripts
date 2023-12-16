@@ -43,3 +43,7 @@ declare -f mal | tail -n +2 >> ~/.bashrc
 echo "}" >> ~/.bashrc
 echo "Installation complete!"
 echo "Please restart your shell to make the mal available."
+
+
+
+

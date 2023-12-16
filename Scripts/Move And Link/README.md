@@ -1,14 +1,16 @@
 # Move And Link
 ## install :
 ```
-chmod +x install.sh
-./install.sh
+chmod +x move-and-link.sh
+```
+```
+./move-and-link.sh
 ```
 ## usage :
 ```
-mal old/path new/path/
-mal old/file new/path/
+move-and-link old/path new/path/
+move-and-link old/file new/path/
 
 ```
 
-The mal function works like mv command.
+The move-and-link command works like mv command.
