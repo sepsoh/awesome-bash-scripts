@@ -11,12 +11,14 @@ script_files=$(find "$scripts_dir" -type f -name "abs.*")
 file_count=$(echo "$script_files" | wc -l)
 
 if [ -n "$script_files" ]; then
-    echo "We found "$file_count" abs scripts to remove."
-    read -p "Do you want to continue? [y/N] " flag 
+    if [ "$1" != "-y" ]; then 
+        echo "We found "$file_count" abs scripts to remove."
+        read -p "Do you want to continue? [y/N] " flag 
 
-    if [ "$flag" != "y" ] && [ "$flag" != "Y" ]; then
-        echo Abort.
-        exit 0
+        if [ "$flag" != "y" ] && [ "$flag" != "Y" ]; then
+            echo Abort.
+            exit 0
+        fi
     fi
 else
     echo "We couldn't locate any ABS scripts."
