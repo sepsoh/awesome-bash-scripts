@@ -1,7 +1,7 @@
-## Uninstall abs tools
+## Uninstall abs scripts
 
 ## Usage
 ```
 chmod +x abs-uninstall.sh
-./abs-uninstall
+./abs-uninstall.sh
 ```
