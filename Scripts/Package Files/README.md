@@ -1,10 +1,10 @@
 # Package Files
 ## install :
 ```
-chmod +x package-name.sh
+chmod +x package-files.sh
 ```
 ```
-./package-name.sh zip
+./package-files.sh zip
 ```
 
 Get related files to a package and calculate the used size on disk.
