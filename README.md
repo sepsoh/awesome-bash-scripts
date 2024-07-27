@@ -24,4 +24,5 @@ You can also use each script individually.
 | [abs.move-and-link](<Scripts/Move And Link>)         | Move files and link to new path (old path also work)                     |
 | [abs.share-file](<Scripts/Share File>)               | Upload Files on the http://0x0.st and get download link                  |
 | [abs.package-files](<Scripts/Package Files>)         | Get the files of a package and their size                                |
-| [abs.abs-uninstall](<Scripts/ABS Uninstall>)         | Uninstall Me                                                             |
+| [abs.abs-update](<Scripts/ABS Update>)               | Update me to latest version                                              |
+| [abs.abs-uninstall](<Scripts/ABS Uninstall>)         | Uninstall me and delete all sctipts                                      |
