@@ -40,8 +40,6 @@ LAN_STATE=-1
 INTRANET_STATE=-1
 INTERNET_STATE=-1
 DNS_STATE=-1
-HTTPS_STATE=-1
-HTTP_STATE=-1
 
 #used to see if the condition of the interface has improved
 LAST_INTERFACE_STATE=-1
@@ -49,11 +47,14 @@ LAST_PRIVATE_IP_STATE=-1
 LAST_LAN_STATE=-1
 LAST_INTRANET_STATE=-1
 LAST_INTERNET_STATE=-1
-
+LAST_DNS_STATE=-1
 #interfaces that are expected to be able to reach internet
 TARGET_INTERFACES=""
 #script runs for the first target and after the fix can run for the other
 CURRENT_INTERFACE=""
+
+RELIABLE_DNS_SERVER1="8.8.8.8"
+RELIABLE_DNS_SERVER2="8.8.4.4"
 
 #used to seperate the output of some function from another
 LINE_DELIMITER="--------------------------"
@@ -80,17 +81,6 @@ function get_interface_ipv4s {
 }
 
 
-#check functions:
-#used to check if a certain functionality of the device properly
-function check_if_interface_ip_is_static {
-		interface_name="$1"
-		interface_ip="$2"
-		ip -o addr | grep "$interface_name" | grep "$interface_ip" | grep "dynamic"
-		#0 on finding the work dynamic
-		#1 on not finding it 
-		return $?
-
-}
 function check_internet_connectivity {
 		interface_name="$1"
 		ping_dest=""
@@ -219,6 +209,7 @@ function check_network_states {
 		INTERFACE_MSG="network interface"
 		PRIVATE_IP_MSG="private ip usability"
 		LAN_MSG="LAN reachability"
+		DNS_MSG="DNS"
 		INTRANET_MSG="Intranet reachability"
 		INTERNET_MSG="Internet reachability"
 
@@ -252,6 +243,16 @@ function check_network_states {
 				echo -e ${RED}[-] $LAN_MSG${NC}
 		fi
 
+		#DNS
+		if [[ $DNS_STATE = 1 ]];then
+				echo -e ${GREEN}[+] $DNS_MSG${NC}
+		elif [[ $DNS_STATE = -1 ]];then
+				echo -e [?] $LAN_MSG
+		else
+				echo -e ${RED}[-] $DNS_MSG${NC}
+		fi
+
+
 		#Intranet
 		if [[ $INTRANET_STATE = 1 ]];then
 				echo -e ${GREEN}[+] $INTRANET_MSG${NC}
@@ -279,11 +280,12 @@ function set_network_states {
 		INTERFACE_STATE=$value
 		PRIVATE_IP_MSG=$value
 		LAN_STATE=$value
+		DNS_STATE=$value
 		INTRANET_STATE=$value
 		INTERNET_STATE=$value
 }
 
-function init_states {
+function check_all_on_interface {
 		interface_name="$1"
 		check_interface_self_connectivity $interface_name
 		errno=$?
@@ -366,8 +368,14 @@ function restart_and_renew_interface {
 		dhcp_renew $interface_name
 }
 
+function set_reliable_dns {
+		echo -e ${BLUE}[*] setting reliable dns${NC}
+
+		sudo sh -c "echo nameserver $RELIABLE_DNS_SERVER1 > /etc/resolv.conf"
+		sudo sh -c "echo nameserver $RELIABLE_DNS_SERVER2 > /etc/resolv.conf"
+}
+
 function try_to_fix_interface {
-#uses $CURRENT_INTERFACE
 		interface_name="$1"
 		if [[ $INTERFACE_STATE = 0 ]];then
 				echo -e ${BLUE}[*] restarting interface $interface_name${NC}
@@ -375,6 +383,9 @@ function try_to_fix_interface {
 		fi
 		if [[ $PRIVATE_IP_STATE = 0 ]];then
 				dhcp_renew $interface_name
+		fi
+		if [[ $DNS_STATE = 0 ]];then
+				set_reliable_dns
 		fi
 
 
@@ -421,6 +432,7 @@ function update_last_network_states {
 		LAST_INTERFACE_STATE=$INTERFACE_STATE
 		LAST_PRIVATE_IP_STATE=$PRIVATE_IP_STATE
 		LAST_LAN_STATE=$LAN_STATE
+		LAST_DNS_STATE=$DNS_STATE
 		LAST_INTRANET_STATE=$INTRANET_STATE
 		LAST_INTERNET_STATE=$INTERNET_STATE
 }
@@ -446,7 +458,7 @@ function main {
 				
 		fi
 
-		echo -e ${BLUE}[*] interfaces to troubleshoot: $TARGET_INTERFACES${NC}
+		echo -e ${YELLOW}[*] interfaces to troubleshoot: $TARGET_INTERFACES${NC}
 		if [[ $VERBOSE_FLAG = 1 ]];then
 				REDIRECT_DEST="1"
 		fi
@@ -459,14 +471,14 @@ function main {
 				set_network_states -1
 				update_last_network_states
 				while [[ $(did_interface_improve) = 1 ]];do
-						echo -e ${BLUE}[*] troubleshooting $interface${NC}
+						update_last_network_states
+						echo -e ${YELLOW}[*] troubleshooting $interface${NC}
 						CURRENT_INTERFACE=$interface
 						
-						update_last_network_states
-						init_states $interface
+						check_all_on_interface $interface
+						check_network_states
 						
 						try_to_fix_interface $interface
-						check_network_states
 
 				done		
 
