@@ -37,11 +37,18 @@ INTERFACE_STATE=-1
 #indicates if the private ip is usable (dhcp lease may have expired)
 PRIVATE_IP_STATE=-1
 LAN_STATE=-1
-INTERNET_STATE=-1
 INTRANET_STATE=-1
+INTERNET_STATE=-1
 DNS_STATE=-1
 HTTPS_STATE=-1
 HTTP_STATE=-1
+
+#used to see if the condition of the interface has improved
+LAST_INTERFACE_STATE=-1
+LAST_PRIVATE_IP_STATE=-1
+LAST_LAN_STATE=-1
+LAST_INTRANET_STATE=-1
+LAST_INTERNET_STATE=-1
 
 #interfaces that are expected to be able to reach internet
 TARGET_INTERFACES=""
@@ -225,7 +232,6 @@ function check_network_states {
 				echo -e [?] $INTERFACE_MSG
 		else
 				echo -e ${RED}[-] $INTERFACE_MSG${NC}
-				good_to_exit=0
 		fi
 
 		#private ip
@@ -235,7 +241,6 @@ function check_network_states {
 				echo -e [?] $PRIVATE_IP_MSG
 		else
 				echo -e ${RED}[-] $PRIVATE_IP_MSG${NC}
-				good_to_exit=0
 		fi
 
 		#LAN
@@ -245,7 +250,6 @@ function check_network_states {
 				echo -e [?] $LAN_MSG
 		else
 				echo -e ${RED}[-] $LAN_MSG${NC}
-				good_to_exit=0
 		fi
 
 		#Intranet
@@ -255,7 +259,6 @@ function check_network_states {
 				echo -e [?] $INTRANET_MSG
 		else
 				echo -e ${RED}[-] $INTRANET_MSG${NC}
-				good_to_exit=0
 		fi
 		
 		#Internet
@@ -265,7 +268,6 @@ function check_network_states {
 				echo -e [?] $INTERNET_MSG
 		else
 				echo -e ${RED}[-] $INTERNET_MSG${NC}
-				good_to_exit=0
 		fi
 		
 		echo -e ${YELLOW}$LINE_DELIMITER${NC}
@@ -389,6 +391,40 @@ function handle_args {
 		done
 }
 
+function did_interface_improve {
+		
+		if [[ $INTERFACE_STATE > $LAST_INTERFACE_STATE ]] || [[ $INTERFACE_STATE = -1 ]];then
+				echo 1
+				return
+		fi
+		if [[ $PRIVATE_IP_STATE > $LAST_PRIVATE_IP_STATE ]] || [[ $PRIVATE_IP_STATE = -1 ]];then
+				echo 1 	
+				return
+		fi
+		if [[ $LAN_STATE > $LAST_LAN_STATE ]] || [[ $LAN_STATE = -1 ]];then
+				echo 1 	
+				return
+		fi
+		if [[ $INTRANET_STATE > $LAST_INTRANET_STATE ]] || [[ $INTRANET_STATE = -1 ]];then
+				echo 1 	
+				return
+		fi
+		if [[ $INTERNET_STATE > $LAST_INTERNET_STATE ]] || [[ $INTERNET_STATE = -1 ]];then 	
+				echo 1 	
+				return
+		fi
+		echo 0	
+		return
+}
+
+function update_last_network_states {
+		LAST_INTERFACE_STATE=$INTERFACE_STATE
+		LAST_PRIVATE_IP_STATE=$PRIVATE_IP_STATE
+		LAST_LAN_STATE=$LAN_STATE
+		LAST_INTRANET_STATE=$INTRANET_STATE
+		LAST_INTERNET_STATE=$INTERNET_STATE
+}
+
 function main {
 		handle_args $@
 		TARGET_INTERFACES=$(get_interfaces_with_default_gw)
@@ -417,13 +453,23 @@ function main {
 	
 		IFS=" "
 		for interface in $TARGET_INTERFACES;do
-				echo -e ${BLUE}[*] troubleshooting $interface${NC}
+
+
 				#resetting the states for the current iteration
 				set_network_states -1
-				CURRENT_INTERFACE=$interface
-				init_states $interface
-				try_to_fix_interface $interface
-				check_network_states
+				update_last_network_states
+				while [[ $(did_interface_improve) = 1 ]];do
+						echo -e ${BLUE}[*] troubleshooting $interface${NC}
+						CURRENT_INTERFACE=$interface
+						
+						update_last_network_states
+						init_states $interface
+						
+						try_to_fix_interface $interface
+						check_network_states
+
+				done		
+
 		done
 }
 
