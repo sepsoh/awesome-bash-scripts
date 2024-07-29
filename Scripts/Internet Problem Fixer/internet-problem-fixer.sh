@@ -298,7 +298,8 @@ function init_states {
 		check_dns $interface_name
 		errno=$?
 
-		check_intranet_connectivity $interface_name
+		#will uncomment after appropriate implementation of the function
+		#check_intranet_connectivity $interface_name
 		errno=$?
 		if [[ $errno != 0 ]];then
 				return 1 	
