@@ -13,10 +13,33 @@ function download_latest_release() {
 
 }
 
-function update_tools(){
-  bash /tmp/awesome-bash-scripts-main/install.sh
-  rm /tmp/awesome-bash-scripts.zip
-  rm -rf /tmp/awesome-bash-scripts-main
+function update_tools() {
+
+  # Check if /tmp/awesome-bash-scripts-main exists
+  if [[ ! -d "/tmp/awesome-bash-scripts-main" ]]; then
+    echo "Error: Directory /tmp/awesome-bash-scripts-main not found."
+    echo "Please ensure the directory exists or provide the correct path."
+    return 1  # Indicate failure
+  fi
+
+  # Change directory to /tmp/awesome-bash-scripts-main
+  cd "/tmp/awesome-bash-scripts-main" || {
+    echo "Error: Failed to change directory to /tmp/awesome-bash-scripts-main."
+    return 1
+  }
+
+  # Execute install.sh (assuming it's located within the directory)
+  ./install.sh || {
+    echo "Error: install.sh execution failed."
+    return 1
+  }
+
+  # Remove temporary directory and ZIP file (if needed)
+  # Consider keeping the directory if tools are used frequently
+  # rm -rf "/tmp/awesome-bash-scripts-main"  # Optional cleanup
+  rm "/tmp/awesome-bash-scripts.zip"  # Optional cleanup
+
+  echo "Update completed successfully."
 }
 
 echo "Latest release for $repo: $latest_release"
