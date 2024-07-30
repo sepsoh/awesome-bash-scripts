@@ -23,6 +23,7 @@ Options:\n\
 \t-v, --verbose\tverbose\n\
 \t-d, --debug\tdebug: redirects the used commands to stdout\n\
 \t-n, --no-fix\tdon't try to fix ( eliminate the requirement for the script to be root )\n\
+\t-i, --interface 
 "
 
 #google dns primary and secondary, example.com, google.com
@@ -117,7 +118,7 @@ function get_default_gws_of_interface {
 
 function get_interface_ipv4s {
 		interface_name="$1"
-		ip -o addr | grep "^[[:num:]]+ "$interface_name | grep -o -E "$IPV4_REGEX$IPV4_NETMASK_REGEX" | cut -f1 -d "/" | tr $'\n' ' '
+		ip -o addr | grep "^[[:digit:]]+: $interface_name" | grep -o -E "$IPV4_REGEX$IPV4_NETMASK_REGEX" | cut -f1 -d "/" | tr $'\n' ' '
 }
 
 
@@ -198,7 +199,7 @@ function check_lan_connectivity {
 		INTRANET_STATE=0
 		INTERNET_STATE=0
 		
-		log "${RED}[-] $interface_name can\'t reach it\'t LAN${NC}" $VERBOSE_LOG_LVL
+		log "${RED}[-] $interface_name can't reach it't LAN${NC}" $VERBOSE_LOG_LVL
 		return 1
 }
 function check_dns {
@@ -456,6 +457,10 @@ function handle_args {
 
 function did_interface_improve {
 		
+		if [[ $TRY_TO_FIX = 0 ]] && [[ $INTERFACE_STATE != -1 ]];then
+				echo 0
+				return
+		fi
 		if [[ $INTERFACE_STATE > $LAST_INTERFACE_STATE ]] || [[ $INTERFACE_STATE = -1 ]];then
 				echo 1
 				return
