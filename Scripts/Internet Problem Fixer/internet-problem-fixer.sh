@@ -15,7 +15,11 @@ TIMEOUT="1"
 INTERFACE_CHANGE_STATE_SLEEP="1"
 DHCP_COMPLETION_SLEEP="10"
 
-HELP="-v verbose flag"
+HELP="\
+Internet problem fixer\\n\
+Options:\n\
+\t-v, --verbose\tverbose\n\
+\t-d, --debug\tdebug: redirects the used commands to stdin"
 
 #google dns primary and secondary, example.com, google.com
 INTERNET_IPV4S=("8.8.8.8" "8.8.4.4" "93.184.215.14" "142.250.184.206")
@@ -58,6 +62,14 @@ RELIABLE_DNS_SERVER2="8.8.4.4"
 
 #used to seperate the output of some function from another
 LINE_DELIMITER="--------------------------"
+
+#log levels
+#10-40 and 60-90 are reserved for the future use
+DEFAULT_LOG_LVL=0
+VERBOSE_LOG_LVL=50
+DEBUG_LOG_LVL=100
+
+CURRENT_LOG_LVL=DEFAULT_LOG_LVL
 
 #get functions:
 function get_all_interfaces {
@@ -392,9 +404,11 @@ function try_to_fix_interface {
 
 function handle_args {
 		for arg in $@;do
-				if [ "$arg" = "-v" ];then
-						export VERBOSE_FLAG=1
-				elif [ "$arg" = "-h" ];then
+				if [ "$arg" = "-v" ] || [ "$arg" = "--verbose" ];then
+						CURRENT_LOG_LVL=$VERBOSE_LOG_LVL
+				elif [ "$arg" = "-d" ] || [ "$arg" = "--debug" ];then
+						CURRENT_LOG_LVL=$DEBUG_LOG_LVL
+				elif [ "$arg" = "-h" ] || [ "$arg" = "--help" ];then
 						echo -e $HELP
 						exit 1
 				fi				
@@ -458,7 +472,7 @@ function main {
 		fi
 
 		echo -e ${YELLOW}[*] interfaces to troubleshoot: $TARGET_INTERFACES${NC}
-		if [[ $VERBOSE_FLAG = 1 ]];then
+		if [[ $CURRENT_LOG_LVL -ge $DEBUG_LOG_LVL ]];then
 				REDIRECT_DEST="1"
 		fi
 	
