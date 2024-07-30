@@ -99,6 +99,7 @@ function log {
  	string="$1"
 	log_level="$2"
 	
+	
 	#should be dynamic based on the switches
 	#like a user sometimes wants to send all of errors over a socket(s) and have the states shown in a terminal
 	dest=1
@@ -255,7 +256,7 @@ function check_interface_self_connectivity {
 		interface_ips=$(get_interface_ipv4s $interface_name)
 		
 		log "${BLUE}[*] checking interface self connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
-		log "interface ips of $interface_name: $interface_ips"
+		log "interface ips of $interface_name: $interface_ips" $DEBUG_LOG_LVL
 
 		OLD_IFS=$IFS
 		IFS=$' '
