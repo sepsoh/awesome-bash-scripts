@@ -302,8 +302,7 @@ function check_all_on_interface {
 		check_dns $interface_name
 		errno=$?
 
-		#will uncomment after appropriate implementation of the function
-		#check_intranet_connectivity $interface_name
+		check_intranet_connectivity $interface_name
 		errno=$?
 		if [[ $errno != 0 ]];then
 				return 1 	
