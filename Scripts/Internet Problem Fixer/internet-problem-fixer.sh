@@ -23,11 +23,11 @@ TRY_TO_FIX=1
 HELP="\
 Internet problem fixer\\n\
 Options:\n\
-\t-v, --verbose\tverbose\n\
-\t-d, --debug\tdebug: redirects the used commands to stdout\n\
-\t-n, --no-fix\tdon't try to fix ( eliminate the requirement for the script to be root )\n\
-\t-i, --interface: troubleshoot the provided interfaces only if used -x will be ignored\n\
-\t-x, --exclude: ignore the provided interfaces\n\
+\t-v\tverbose\n\
+\t-d\tdebug: redirects the used commands to stdout\n\
+\t-n\tdon't try to fix ( eliminate the requirement for the script to be root )\n\
+\t-i INTERFACE_NAMES\ttroubleshoot the provided interfaces only if used -x will be ignored\n\
+\t-x INTERFACE_NAMES\tignore the provided interfaces\n\
 \n\
 Usage Examples:\n\
 \t$0 -i eth0,wlan0\ttroubleshoots only eth0 and wlan0 interfaces\n\
