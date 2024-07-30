@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#goto switches
-
 #used to push and pop IFS
 OLD_IFS=$IFS
 
