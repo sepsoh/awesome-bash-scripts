@@ -2,6 +2,9 @@
 
 #goto switches
 
+#used to push and pop IFS
+OLD_IFS=$IFS
+
 #terminal colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -23,7 +26,8 @@ Options:\n\
 \t-v, --verbose\tverbose\n\
 \t-d, --debug\tdebug: redirects the used commands to stdout\n\
 \t-n, --no-fix\tdon't try to fix ( eliminate the requirement for the script to be root )\n\
-\t-i, --interface: troubleshoot the provided interfaces only\n\
+\t-i, --interface: troubleshoot the provided interfaces only if used -x will be ignored\n\
+\t-x, --exclude: ignore the provided interfaces\n\
 \n\
 Usage Examples:\n\
 \t$0 -i eth0,wlan0\ttroubleshoots only eth0 and wlan0 interfaces\n\
@@ -72,7 +76,7 @@ TARGET_INTERFACES=""
 #script runs for the first target and after the fix can run for the other
 CURRENT_INTERFACE=""
 #-x --exclude input
-IGNORED_INTERFACES=""
+EXCLUDED_INTERFACES=""
 #-i --interface input
 INCLUDED_INTERFACES=""
 
@@ -88,7 +92,7 @@ DEFAULT_LOG_LVL=0
 VERBOSE_LOG_LVL=50
 DEBUG_LOG_LVL=100
 
-CURRENT_LOG_LVL=DEFAULT_LOG_LVL
+CURRENT_LOG_LVL=$DEFAULT_LOG_LVL
 
 
 function log {
@@ -136,7 +140,9 @@ function check_internet_connectivity {
 		fi
 
 		log "${BLUE}[*] checking internet connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
+		log "ping destintaion:$ping_dest" $DEBUG_LOG_LVL
 
+		OLD_IFS=$IFS
 		IFS=" "
 		for host in ${ping_dest[@]};do
 				if ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
@@ -148,6 +154,7 @@ function check_internet_connectivity {
 						return 0
 				fi
 		done
+		IFS=$OLD_IFS
 		
 
 		log "${RED}[-] $interface_name can't reach the internet${NC}" $VERBOSE_LOG_LVL
@@ -165,7 +172,9 @@ function check_intranet_connectivity {
 		fi
 
 		log "${BLUE}[*] checking intranet connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
+		log "ping dest:$ping_dest" $DEBUG_LOG_LVL
 
+		OLD_IFS=$IFS
 		IFS=" "
 		for host in ${ping_dest[@]};do
 				if ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
@@ -176,6 +185,7 @@ function check_intranet_connectivity {
 						return 0
 				fi
 		done
+		IFS=$OLD_IFS
 		
 		log "${RED}[-] $interface_name can't reach the intranet${NC}" $VERBOSE_LOG_LVL
 		INTRANET_STATE=0
@@ -188,7 +198,11 @@ function check_lan_connectivity {
 		default_gws=$(get_default_gws_of_interface $interface_name)
 
 		log "${BLUE}[*] checking LAN connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
+		log "gateways of $interface_name: $default_gws" $DEBUG_LOG_LVL
+
 		
+		OLD_IFS=$IFS
+		IFS=" "
 		for host in $default_gws;do
 				if ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
@@ -197,6 +211,7 @@ function check_lan_connectivity {
 						return 0
 				fi
 		done
+		IFS=$OLD_IFS
 		
 		PRIVATE_IP_STATE=0
 		LAN_STATE=0
@@ -213,6 +228,8 @@ function check_dns {
 		interface_name="$1"
 
 		log "${BLUE}[*] checking DNS${NC}" $VERBOSE_LOG_LVL
+
+		OLD_IFS=$IFS
 		IFS=$","
 		for domain in $INTERNET_DOMAINS;do
 				if nslookup -timeout=$TIMEOUT $domain >&$REDIRECT_DEST;then
@@ -226,6 +243,8 @@ function check_dns {
 						return 0
 				fi 
 		done		
+		IFS=$OLD_IFS
+
 		log "${RED}[-] DNS doesn\'t work${NC}" $VERBOSE_LOG_LVL
 		DNS_STATE=0
 		return 1
@@ -236,6 +255,9 @@ function check_interface_self_connectivity {
 		interface_ips=$(get_interface_ipv4s $interface_name)
 		
 		log "${BLUE}[*] checking interface self connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
+		log "interface ips of $interface_name: $interface_ips"
+
+		OLD_IFS=$IFS
 		IFS=$' '
 		for ip in $interface_ips;do
 				ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $ip >&$REDIRECT_DEST
@@ -247,6 +269,7 @@ function check_interface_self_connectivity {
 						return 1
 				fi
 		done
+		IFS=$OLD_IFS
 						
 		INTERFACE_STATE=1
 		return 0
@@ -438,7 +461,7 @@ function try_to_fix_interface {
 
 function handle_args {
 
-		while getopts "vdhni:" name;do
+		while getopts "vdhni:x:" name;do
 					case $name in
 					v)
 							CURRENT_LOG_LVL=$VERBOSE_LOG_LVL;;
@@ -451,6 +474,8 @@ function handle_args {
 							TRY_TO_FIX=0;;
 					i)
 							INCLUDED_INTERFACES=$OPTARG;;
+					x)
+							EXCLUDED_INTERFACES=$OPTARG;;
 					?)    
 							echo -e $HELP
 							exit 1;;
@@ -498,35 +523,78 @@ function update_last_network_states {
 		LAST_INTERNET_STATE=$INTERNET_STATE
 }
 
+function scape_sed_special_chars {
+		string_to_scape="$1"
+		echo "$(<<<"$string_to_scape" sed -e 's`[][\\/.*^$]`\\&`g')"
+}
+
+function remove_list_from_list {
+		list="$1"
+		delimiter_of_list="$2"
+		remove_list="$3"
+		delimiter_of_remove_list="$4"
+
+		remove_list="$(scape_sed_special_chars $remove_list)"
+		delimiter_of_list="$(scape_sed_special_chars $delimiter_of_list)"
+
+		OLD_IFS=$IFS
+		IFS="$delimiter_of_remove_list"
+		for element in $remove_list;do
+				list=$(sed -e "s/$element$delimiter_of_list//g" <<< $list)
+				list=$(sed -e "s/$element//g" <<< $list)
+		done
+		IFS=$OLD_IFS
+
+		#if list is empty
+		if [ "$list" = "$delimiter_of_list" ];then
+				return
+		fi
+		echo $list
+}
+
 
 function determine_target_interfaces {
 
 		if ! [ -z $INCLUDED_INTERFACES ];then
 				TARGET_INTERFACES="$INCLUDED_INTERFACES"
+				log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
 				return
 		fi
 
-		TARGET_INTERFACES=$(get_interfaces_with_default_gw)
+		TARGET_INTERFACES="$(get_interfaces_with_default_gw)"
+		
+		TARGET_INTERFACES="$(remove_list_from_list $TARGET_INTERFACES $INTERFACE_LIST_DELIMITER $EXCLUDED_INTERFACES $INTERFACE_LIST_DELIMITER)"
+
 
 		if [ -z "$TARGET_INTERFACES" ];then
 				if [[ $TRY_TO_FIX = 1 ]];then
 						#might want to add default gateway based on icmp scan?
 						log "${RED}[-] no interfaces to get to internet refreshing all interfaces${NC}" $DEFAULT_LOG_LVL
+						TARGET_INTERFACES="$(get_all_interfaces)"
+						TARGET_INTERFACES="$(remove_list_from_list $TARGET_INTERFACES $INTERFACE_LIST_DELIMITER $EXCLUDED_INTERFACES $INTERFACE_LIST_DELIMITER)"
+						log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
+
+						OLD_IFS=$IFS
 						IFS=$INTERFACE_LIST_DELIMITER
-						for interface in $(get_all_interfaces);do
+						for interface in $TARGET_INTERFACES;do
 								restart_and_renew_interface $interface
 						done
+						IFS=$OLD_IFS
 
 						TARGET_INTERFACES=$(get_interfaces_with_default_gw)
+						TARGET_INTERFACES="$(remove_list_from_list $TARGET_INTERFACES $INTERFACE_LIST_DELIMITER $EXCLUDED_INTERFACES $INTERFACE_LIST_DELIMITER)"
 				fi
 				if [ -z "$TARGET_INTERFACES" ];then
 						log "${RED}[-] no interfaces to get to internet exiting${NC}" $DEFAULT_LOG_LVL
 						exit 1
 				fi
 				TARGET_INTERFACES=$(get_interfaces_with_default_gw)
+				TARGET_INTERFACES="$(remove_list_from_list $TARGET_INTERFACES $INTERFACE_LIST_DELIMITER $EXCLUDED_INTERFACES $INTERFACE_LIST_DELIMITER)"
 				
 		fi
 
+
+		log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
 
 }
 
@@ -544,9 +612,9 @@ function main {
 				REDIRECT_DEST="1"
 		fi
 	
+		OLD_IFS=$IFS
 		IFS=$INTERFACE_LIST_DELIMITER
 		for interface in $TARGET_INTERFACES;do
-
 
 				#resetting the states for the current iteration
 				set_network_states -1
@@ -564,8 +632,8 @@ function main {
 						fi
 
 				done		
-
 		done
+		IFS=$OLD_IFS
 }
 
 main $@
