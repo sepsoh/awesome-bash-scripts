@@ -1,11 +1,11 @@
 current priorities:  
-        option to set a specific interface as target  
-        option to ignore an interface  
+        -i, --interface: option to set a specific interface as target  
+        -x, --exclude:    option to ignore an interface  
         dynamic sleep for dhclient and monitor if route table is updated  
         VPN detection and asking the user to turn it off  
-        log levels
         do target interface selection in a function
-        ontion to only show the current states
+        --no-fix option don't execute any fix commands ( doesnt require root )
+
         
 bugs:  
         each device is treated twice ( because of the -1 states being written on last_states )  
