@@ -8,7 +8,6 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 #runtime flags/configs
-VERBOSE_FLAG=0
 REDIRECT_DEST="/dev/null"
 PING_COUNT="4"
 TIMEOUT="1"
