@@ -23,7 +23,11 @@ Options:\n\
 \t-v, --verbose\tverbose\n\
 \t-d, --debug\tdebug: redirects the used commands to stdout\n\
 \t-n, --no-fix\tdon't try to fix ( eliminate the requirement for the script to be root )\n\
-\t-i, --interface 
+\t-i, --interface: troubleshoot the provided interfaces only\n\
+\n\
+Usage Examples:\n\
+\t$0 -i eth0,wlan0\ttroubleshoots only eth0 and wlan0 interfaces\n\
+\t$0 -n -i eth0\tdoesn't try to fix eth0 just shows the states instead
 "
 
 #google dns primary and secondary, example.com, google.com
