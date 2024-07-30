@@ -1,11 +1,7 @@
 current priorities:  
-        -i, --interface: option to set a specific interface as target  
-        -x, --exclude:    option to ignore an interface  
         dynamic sleep for dhclient and monitor if route table is updated  
         VPN detection and asking the user to turn it off  
-        do target interface selection in a function
-        --no-fix option don't execute any fix commands ( doesnt require root )
-
+        detect and igore VPN interfaces by default
         
 bugs:  
         each device is treated twice ( because of the -1 states being written on last_states )  
