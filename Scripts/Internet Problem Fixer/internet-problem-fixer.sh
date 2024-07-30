@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#goto switches
+
 #terminal colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -54,10 +56,13 @@ LAST_LAN_STATE=-1
 LAST_INTRANET_STATE=-1
 LAST_INTERNET_STATE=-1
 LAST_DNS_STATE=-1
+
+INTERFACE_LIST_DELIMITER=","
 #interfaces that are expected to be able to reach internet
 TARGET_INTERFACES=""
 #script runs for the first target and after the fix can run for the other
 CURRENT_INTERFACE=""
+IGNORED_INTERFACES=""
 
 RELIABLE_DNS_SERVER1="8.8.8.8"
 RELIABLE_DNS_SERVER2="8.8.4.4"
@@ -89,12 +94,12 @@ function log {
 
 #get functions:
 function get_all_interfaces {
-		ip addr | grep -E "[[:digit:]]+: [[:alnum:]]+" | cut -f2 -d' ' | sed -e "s/://g" | uniq | tr $'\n' ' '
+		ip addr | grep -E "[[:digit:]]+: [[:alnum:]]+" | cut -f2 -d' ' | sed -e "s/://g" | uniq | tr $'\n' "$INTERFACE_LIST_DELIMITER"
 }
 #used to provide needed data such as interface list
 function get_interfaces_with_default_gw {
 #interfaces used to get to the internet
-		ip route | grep -E "^default .* dev" | grep -o -E "dev [[:alnum:]]+" | cut -f2 -d ' ' | uniq | tr $'\n' ' ' 
+		ip route | grep -E "^default .* dev" | grep -o -E "dev [[:alnum:]]+" | cut -f2 -d ' ' | uniq | tr $'\n' "$INTERFACE_LIST_DELIMITER"
 }
 
 function get_default_gws_of_interface {
@@ -113,15 +118,15 @@ function check_internet_connectivity {
 		interface_name="$1"
 		ping_dest=""
 		if [[ $DNS_STATE = 1 ]];then
-				ping_dest=$INTERNET_DOMAINS
+				ping_dest="${INTERNET_DOMAINS[@]}"
 		else
-				ping_dest=$INTERNET_IPV4S
+				ping_dest="${INTERNET_IPV4S[@]}"
 		fi
 
 		log "${BLUE}[*] checking internet connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
 
-		IFS=","
-		for host in $ping_dest;do
+		IFS=" "
+		for host in ${ping_dest[@]};do
 				if ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
 						PRIVATE_IP_STATE=1
@@ -133,7 +138,7 @@ function check_internet_connectivity {
 		done
 		
 
-		log "${RED}[-] $interface_name can\'t reach the internet${NC}" $VERBOSE_LOG_LVL
+		log "${RED}[-] $interface_name can't reach the internet${NC}" $VERBOSE_LOG_LVL
 
 		INTERNET_STATE=0
 		return 1
@@ -142,14 +147,15 @@ function check_intranet_connectivity {
 		interface_name="$1"
 		ping_dest=""
 		if [[ $DNS_STATE = 1 ]];then
-				ping_dest=$INTRANET_DOMAINS
+				ping_dest="${INTRANET_DOMAINS[@]}"
 		else
-				ping_dest=$INTRANET_DOMAINS
+				ping_dest="${INTRANET_IPV4S[@]}"
 		fi
 
 		log "${BLUE}[*] checking intranet connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
-		IFS=","
-		for host in $ping_dest;do
+
+		IFS=" "
+		for host in ${ping_dest[@]};do
 				if ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
 						PRIVATE_IP_STATE=1
@@ -159,7 +165,7 @@ function check_intranet_connectivity {
 				fi
 		done
 		
-		log "${RED}[-] $interface_name can\'t reach the intranet${NC}" $VERBOSE_LOG_LVL
+		log "${RED}[-] $interface_name can't reach the intranet${NC}" $VERBOSE_LOG_LVL
 		INTRANET_STATE=0
 		INTERNET_STATE=0
 		return 1
@@ -237,7 +243,7 @@ function check_network_states {
 		INTERFACE_MSG="network interface"
 		PRIVATE_IP_MSG="private ip usability"
 		LAN_MSG="LAN reachability"
-		DNS_MSG="DNS"
+		DNS_MSG="DNS ( not currently interface dependent )"
 		INTRANET_MSG="Intranet reachability"
 		INTERNET_MSG="Internet reachability"
 
@@ -275,7 +281,7 @@ function check_network_states {
 		if [[ $DNS_STATE = 1 ]];then
 				log "${GREEN}[+] $DNS_MSG${NC}" $DEFAULT_LOG_LVL
 		elif [[ $DNS_STATE = -1 ]];then
-				log "[?] $LAN_MSG" $DEFAULT_LOG_LVL
+				log "[?] $DNS_MSG" $DEFAULT_LOG_LVL
 		else
 				log "${RED}[-] $DNS_MSG${NC}" $DEFAULT_LOG_LVL
 		fi
@@ -419,18 +425,26 @@ function try_to_fix_interface {
 }
 
 function handle_args {
-		for arg in $@;do
-				if [ "$arg" = "-v" ] || [ "$arg" = "--verbose" ];then
-						CURRENT_LOG_LVL=$VERBOSE_LOG_LVL
-				elif [ "$arg" = "-d" ] || [ "$arg" = "--debug" ];then
-						CURRENT_LOG_LVL=$DEBUG_LOG_LVL
-				elif [ "$arg" = "-h" ] || [ "$arg" = "--help" ];then
-						log "$HELP" $DEFAULT_LOG_LVL
-						exit 1
-				elif [ "$arg" = "-n" ] || [ "$arg" = "--no-fix" ];then
-						TRY_TO_FIX=0
-				fi				
+
+		while getopts "vdhni:" name;do
+					case $name in
+					v)
+							CURRENT_LOG_LVL=$VERBOSE_LOG_LVL;;
+					d)
+							CURRENT_LOG_LVL=$DEBUG_LOG_LVL;;
+					h)
+							echo $HELP
+							exit 1;;
+					n)
+							TRY_TO_FIX=0;;
+					i)
+							CURRENT_INTERFACE=$OPTARG;;
+					?)    
+							echo $HELP
+							exit 1;;
+					esac
 		done
+
 }
 
 function did_interface_improve {
@@ -476,7 +490,7 @@ function determine_target_interfaces {
 				if [[ $TRY_TO_FIX = 1 ]];then
 						#might want to add default gateway based on icmp scan?
 						log "${RED}[-] no interfaces to get to internet refreshing all interfaces${NC}" $DEFAULT_LOG_LVL
-						IFS=" "
+						IFS=$INTERFACE_LIST_DELIMITER
 						for interface in $(get_all_interfaces);do
 								restart_and_renew_interface $interface
 						done
@@ -508,7 +522,7 @@ function main {
 				REDIRECT_DEST="1"
 		fi
 	
-		IFS=" "
+		IFS=$INTERFACE_LIST_DELIMITER
 		for interface in $TARGET_INTERFACES;do
 
 
