@@ -19,7 +19,7 @@ HELP="\
 Internet problem fixer\\n\
 Options:\n\
 \t-v, --verbose\tverbose\n\
-\t-d, --debug\tdebug: redirects the used commands to stdin"
+\t-d, --debug\tdebug: redirects the used commands to stdout"
 
 #google dns primary and secondary, example.com, google.com
 INTERNET_IPV4S=("8.8.8.8" "8.8.4.4" "93.184.215.14" "142.250.184.206")
