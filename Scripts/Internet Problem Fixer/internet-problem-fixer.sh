@@ -13,12 +13,15 @@ PING_COUNT="4"
 TIMEOUT="1"
 INTERFACE_CHANGE_STATE_SLEEP="1"
 DHCP_COMPLETION_SLEEP="10"
+TRY_TO_FIX=1
 
 HELP="\
 Internet problem fixer\\n\
 Options:\n\
 \t-v, --verbose\tverbose\n\
-\t-d, --debug\tdebug: redirects the used commands to stdout"
+\t-d, --debug\tdebug: redirects the used commands to stdout\n\
+\t-n, --no-fix\tdon't try to fix ( eliminate the requirement for the script to be root )\n\
+"
 
 #google dns primary and secondary, example.com, google.com
 INTERNET_IPV4S=("8.8.8.8" "8.8.4.4" "93.184.215.14" "142.250.184.206")
@@ -424,6 +427,8 @@ function handle_args {
 				elif [ "$arg" = "-h" ] || [ "$arg" = "--help" ];then
 						log "$HELP" $DEFAULT_LOG_LVL
 						exit 1
+				elif [ "$arg" = "-n" ] || [ "$arg" = "--no-fix" ];then
+						TRY_TO_FIX=0
 				fi				
 		done
 }
@@ -463,19 +468,21 @@ function update_last_network_states {
 		LAST_INTERNET_STATE=$INTERNET_STATE
 }
 
-function main {
-		handle_args $@
+function determine_target_interfaces {
+
 		TARGET_INTERFACES=$(get_interfaces_with_default_gw)
 
 		if [ -z "$TARGET_INTERFACES" ];then
-				#might want to add default gateway based on icmp scan?
-				log "${RED}[-] no interfaces to get to internet refreshing all interfaces${NC}" $DEFAULT_LOG_LVL
-				IFS=" "
-				for interface in $(get_all_interfaces);do
-						restart_and_renew_interface $interface
-				done
+				if [[ $TRY_TO_FIX = 1 ]];then
+						#might want to add default gateway based on icmp scan?
+						log "${RED}[-] no interfaces to get to internet refreshing all interfaces${NC}" $DEFAULT_LOG_LVL
+						IFS=" "
+						for interface in $(get_all_interfaces);do
+								restart_and_renew_interface $interface
+						done
 
-				TARGET_INTERFACES=$(get_interfaces_with_default_gw)
+						TARGET_INTERFACES=$(get_interfaces_with_default_gw)
+				fi
 				if [ -z "$TARGET_INTERFACES" ];then
 						log "${RED}[-] no interfaces to get to internet exiting${NC}" $DEFAULT_LOG_LVL
 						exit 1
@@ -483,6 +490,18 @@ function main {
 				TARGET_INTERFACES=$(get_interfaces_with_default_gw)
 				
 		fi
+
+
+}
+
+function main {
+		handle_args $@
+
+		if [[ $TRY_TO_FIX = 1 ]] && [[ $EUID != 0 ]];then
+				exec sudo bash $0 $@
+		fi
+
+		determine_target_interfaces
 
 		log "${YELLOW}[*] interfaces to troubleshoot: $TARGET_INTERFACES${NC}" $VERBOSE_LOG_LVL
 		if [[ $CURRENT_LOG_LVL -ge $DEBUG_LOG_LVL ]];then
@@ -504,7 +523,9 @@ function main {
 						check_all_on_interface $interface
 						check_network_states
 						
-						try_to_fix_interface $interface
+						if [[ $TRY_TO_FIX = 1 ]];then
+								try_to_fix_interface $interface
+						fi
 
 				done		
 
