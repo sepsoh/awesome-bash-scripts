@@ -57,12 +57,19 @@ LAST_INTRANET_STATE=-1
 LAST_INTERNET_STATE=-1
 LAST_DNS_STATE=-1
 
+#the delimiter for all interface lists:
+# 	-all get functions provide the list of asked interfaces with the delimiter being $INTERFACE_LIST_DELIMITER
+# 	-all switches that accept a list of interfaces as argument use the $INTERFACE_LIST_DELIMITER
+# 	-all loops in interface lists should set IFS to $INTERFACE_LIST_DELIMITER
 INTERFACE_LIST_DELIMITER=","
 #interfaces that are expected to be able to reach internet
 TARGET_INTERFACES=""
 #script runs for the first target and after the fix can run for the other
 CURRENT_INTERFACE=""
+#-x --exclude input
 IGNORED_INTERFACES=""
+#-i --interface input
+INCLUDED_INTERFACES=""
 
 RELIABLE_DNS_SERVER1="8.8.8.8"
 RELIABLE_DNS_SERVER2="8.8.4.4"
@@ -110,7 +117,7 @@ function get_default_gws_of_interface {
 
 function get_interface_ipv4s {
 		interface_name="$1"
-		ip -o addr | grep $interface_name | grep -o -E "$IPV4_REGEX$IPV4_NETMASK_REGEX" | cut -f1 -d "/" | tr $'\n' ' '
+		ip -o addr | grep "^[[:num:]]+ "$interface_name | grep -o -E "$IPV4_REGEX$IPV4_NETMASK_REGEX" | cut -f1 -d "/" | tr $'\n' ' '
 }
 
 
@@ -433,14 +440,14 @@ function handle_args {
 					d)
 							CURRENT_LOG_LVL=$DEBUG_LOG_LVL;;
 					h)
-							echo $HELP
+							echo -e $HELP
 							exit 1;;
 					n)
 							TRY_TO_FIX=0;;
 					i)
-							CURRENT_INTERFACE=$OPTARG;;
+							INCLUDED_INTERFACES=$OPTARG;;
 					?)    
-							echo $HELP
+							echo -e $HELP
 							exit 1;;
 					esac
 		done
@@ -482,7 +489,13 @@ function update_last_network_states {
 		LAST_INTERNET_STATE=$INTERNET_STATE
 }
 
+
 function determine_target_interfaces {
+
+		if ! [ -z $INCLUDED_INTERFACES ];then
+				TARGET_INTERFACES="$INCLUDED_INTERFACES"
+				return
+		fi
 
 		TARGET_INTERFACES=$(get_interfaces_with_default_gw)
 
