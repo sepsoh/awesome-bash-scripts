@@ -125,7 +125,7 @@ function get_default_gws_of_interface {
 
 function get_interface_ipv4s {
 		interface_name="$1"
-		ip -o addr | grep "^[[:digit:]]+: $interface_name" | grep -o -E "$IPV4_REGEX$IPV4_NETMASK_REGEX" | cut -f1 -d "/" | tr $'\n' ' '
+		ip -o addr | grep -E "^[[:digit:]]+: $interface_name" | grep -o -E "$IPV4_REGEX$IPV4_NETMASK_REGEX" | cut -f1 -d "/" | tr $'\n' ' '
 }
 
 
@@ -533,6 +533,11 @@ function remove_list_from_list {
 		remove_list="$3"
 		delimiter_of_remove_list="$4"
 
+		if [ -z "$remove_list" ];then
+				echo $list
+				return
+		fi
+
 		remove_list="$(scape_sed_special_chars $remove_list)"
 		delimiter_of_list="$(scape_sed_special_chars $delimiter_of_list)"
 
@@ -561,8 +566,7 @@ function determine_target_interfaces {
 		fi
 
 		TARGET_INTERFACES="$(get_interfaces_with_default_gw)"
-		
-		TARGET_INTERFACES="$(remove_list_from_list $TARGET_INTERFACES $INTERFACE_LIST_DELIMITER $EXCLUDED_INTERFACES $INTERFACE_LIST_DELIMITER)"
+		TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
 
 
 		if [ -z "$TARGET_INTERFACES" ];then
@@ -570,7 +574,7 @@ function determine_target_interfaces {
 						#might want to add default gateway based on icmp scan?
 						log "${RED}[-] no interfaces to get to internet refreshing all interfaces${NC}" $DEFAULT_LOG_LVL
 						TARGET_INTERFACES="$(get_all_interfaces)"
-						TARGET_INTERFACES="$(remove_list_from_list $TARGET_INTERFACES $INTERFACE_LIST_DELIMITER $EXCLUDED_INTERFACES $INTERFACE_LIST_DELIMITER)"
+						TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
 						log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
 
 						OLD_IFS=$IFS
@@ -581,14 +585,14 @@ function determine_target_interfaces {
 						IFS=$OLD_IFS
 
 						TARGET_INTERFACES=$(get_interfaces_with_default_gw)
-						TARGET_INTERFACES="$(remove_list_from_list $TARGET_INTERFACES $INTERFACE_LIST_DELIMITER $EXCLUDED_INTERFACES $INTERFACE_LIST_DELIMITER)"
+						TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
 				fi
 				if [ -z "$TARGET_INTERFACES" ];then
 						log "${RED}[-] no interfaces to get to internet exiting${NC}" $DEFAULT_LOG_LVL
 						exit 1
 				fi
 				TARGET_INTERFACES=$(get_interfaces_with_default_gw)
-				TARGET_INTERFACES="$(remove_list_from_list $TARGET_INTERFACES $INTERFACE_LIST_DELIMITER $EXCLUDED_INTERFACES $INTERFACE_LIST_DELIMITER)"
+				TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
 				
 		fi
 
