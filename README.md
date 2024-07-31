@@ -26,3 +26,4 @@ You can also use each script individually.
 | [abs.package-files](<Scripts/Package Files>)         | Get the files of a package and their size                                |
 | [abs.abs-update](<Scripts/ABS Update>)               | Update me to latest version                                              |
 | [abs.abs-uninstall](<Scripts/ABS Uninstall>)         | Uninstall me and delete all sctipts                                      |
+| [abs.internet-problem-fixer](<Scripts/Internet Problem Fixer>) | Detect and fix common internet problems                        |
