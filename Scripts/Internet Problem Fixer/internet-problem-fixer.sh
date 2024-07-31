@@ -486,10 +486,27 @@ function handle_args {
 
 function did_interface_improve {
 		
+		
+		#if we don't try to fix the interface the states won't change
 		if [[ $TRY_TO_FIX = 0 ]] && [[ $INTERFACE_STATE != -1 ]];then
 				echo 0
 				return
 		fi
+		
+		#if all states are good echo 0 to make the main loop to skip this interface
+		if {
+				[[ $INTERFACE_STATE = 1 ]] && 
+				[[ $PRIVATE_IP_STATE = 1 ]] &&
+				[[ $LAN_STATE = 1 ]] && 
+				[[ $DNS_STATE = 1 ]] && 
+				[[ $INTRANET_STATE = 1 ]] &&
+				[[ $INTERNET_STATE = 1 ]]
+		};then
+				echo 0 	
+		fi
+
+
+
 		if [[ $INTERFACE_STATE > $LAST_INTERFACE_STATE ]] || [[ $INTERFACE_STATE = -1 ]];then
 				echo 1
 				return
