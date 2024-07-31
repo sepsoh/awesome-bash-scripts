@@ -29,7 +29,8 @@ Options:\n\
 \n\
 Usage Examples:\n\
 \t$0 -i eth0,wlan0\ttroubleshoots only eth0 and wlan0 interfaces\n\
-\t$0 -n -i eth0\tdoesn't try to fix eth0 just shows the states instead
+\t$0 -n -i eth0\tdoesn't try to fix eth0 just shows the states instead\n\
+\t$0 -x tun0,lo\tignore tun0 and lo
 "
 
 #google dns primary and secondary, example.com, google.com
