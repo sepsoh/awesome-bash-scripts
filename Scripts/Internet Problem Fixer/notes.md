@@ -3,8 +3,6 @@ current priorities:
         VPN detection and asking the user to turn it off  
         detect and igore VPN interfaces by default
         
-bugs:  
-        each device is treated twice ( because of the -1 states being written on last_states )  
   
 things to check for in the future  
         check default route src ip ( need to ping that ip specifically )  
