@@ -13,7 +13,7 @@ things to check for in the future
         check if icmp works  
         check if tcp works  
         check if port 80 works  
-        detect if dhclient didnt manage to renew the ip  
+        detect if dhclient didnt managed to renew the ip  
 
 -if icmp is not available:  
     -test tcp and http  
