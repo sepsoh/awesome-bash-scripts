@@ -255,7 +255,7 @@ function check_dns {
 		done		
 		IFS=$OLD_IFS
 
-		log "${RED}[-] DNS doesn\'t work${NC}" $VERBOSE_LOG_LVL
+		log "${RED}[-] DNS doesn't work${NC}" $VERBOSE_LOG_LVL
 		DNS_STATE=0
 		return 1
 }
