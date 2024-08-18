@@ -93,7 +93,16 @@ DEBUG_LOG_LVL=100
 
 CURRENT_LOG_LVL=$DEFAULT_LOG_LVL
 
+#COMMANDNAME_SWITCHES are used along each COMMANDNAME, this is portability (to test if different switches work on current machine)
+#INIT_COMMANDNAME will be called at the start of the script and fill COMMANDNAME_SWITCHES
+#these switches are currently assumed to work for ping: -c, -I, -W
+#switches that will be used if availbale: -A
+PING_SWITCHES=""
 
+#assumed global variables typically to test things when an actual valid one is not availbale
+ASSUMED_RELIABLE_IP="127.0.0.1"
+#WARNING! ASSUMED_RELIABLE_IP must be reachable via ASSUMED_AVAILABLE_INTERFACE_NAME
+ASSUMED_AVAILABLE_INTERFACE_NAME="lo"
 
 function log {
  	string="$1"
@@ -146,7 +155,7 @@ function check_internet_connectivity {
 		OLD_IFS=$IFS
 		IFS=" "
 		for host in ${ping_dest[@]};do
-				if ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
+				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
 						PRIVATE_IP_STATE=1
 						LAN_STATE=1
@@ -178,7 +187,7 @@ function check_intranet_connectivity {
 		OLD_IFS=$IFS
 		IFS=" "
 		for host in ${ping_dest[@]};do
-				if ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
+				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
 						PRIVATE_IP_STATE=1
 						LAN_STATE=1
@@ -205,7 +214,7 @@ function check_lan_connectivity {
 		OLD_IFS=$IFS
 		IFS=" "
 		for host in $default_gws;do
-				if ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
+				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
 						PRIVATE_IP_STATE=1
 						LAN_STATE=1
@@ -261,7 +270,7 @@ function check_interface_self_connectivity {
 		OLD_IFS=$IFS
 		IFS=$' '
 		for ip in $interface_ips;do
-				ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $ip >&$REDIRECT_DEST
+				ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $ip >&$REDIRECT_DEST
 				errno=$?
 				if [[ $errno != 0 ]];then
 						log "${RED}[-] $ip is not  reachable via $interface_name${NC}" $VERBOSE_LOG_LVL
@@ -620,6 +629,16 @@ function init_determine_target_interfaces {
 
 }
 
+function init_ping_switches {
+		#-A Adaptive ping
+		if ping -c 1 -A $ASSUMED_RELIABLE_IP;then
+				PING_SWITCHES=$PING_SWITCHES" -A "
+		else
+				log "${BLUE} -A is not available for ping, the script will slow down drastically${NC}" $VERBOSE_LOG_LVL
+		fi
+
+		log "ping options: $PING_SWITCHES" $DEBUG_LOG_LVL
+ }
 
 function main {
 		handle_args $@
@@ -629,6 +648,7 @@ function main {
 		fi
 
 		init_determine_target_interfaces
+		init_ping_switches
 
 		log "${YELLOW}[*] interfaces to troubleshoot: $TARGET_INTERFACES${NC}" $VERBOSE_LOG_LVL
 		if [[ $CURRENT_LOG_LVL -ge $DEBUG_LOG_LVL ]];then
