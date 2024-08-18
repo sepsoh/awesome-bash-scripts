@@ -94,6 +94,7 @@ DEBUG_LOG_LVL=100
 CURRENT_LOG_LVL=$DEFAULT_LOG_LVL
 
 
+
 function log {
  	string="$1"
 	log_level="$2"
@@ -575,7 +576,7 @@ function remove_list_from_list {
 }
 
 
-function determine_target_interfaces {
+function init_determine_target_interfaces {
 
 		if ! [ -z $INCLUDED_INTERFACES ];then
 				TARGET_INTERFACES="$INCLUDED_INTERFACES"
@@ -619,6 +620,7 @@ function determine_target_interfaces {
 
 }
 
+
 function main {
 		handle_args $@
 
@@ -626,7 +628,7 @@ function main {
 				exec sudo bash $0 $@
 		fi
 
-		determine_target_interfaces
+		init_determine_target_interfaces
 
 		log "${YELLOW}[*] interfaces to troubleshoot: $TARGET_INTERFACES${NC}" $VERBOSE_LOG_LVL
 		if [[ $CURRENT_LOG_LVL -ge $DEBUG_LOG_LVL ]];then
