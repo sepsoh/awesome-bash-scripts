@@ -642,7 +642,7 @@ function init_determine_target_interfaces {
 
 function init_ping_switches {
 		#-A Adaptive ping
-		if ping -c 1 -A $ASSUMED_RELIABLE_IP;then
+		if ping -c 1 -A $ASSUMED_RELIABLE_IP >$REDIRECT_DEST;then
 				PING_SWITCHES=$PING_SWITCHES" -A "
 		else
 				log "${BLUE} -A is not available for ping, the script will slow down drastically${NC}" $VERBOSE_LOG_LVL
@@ -654,8 +654,13 @@ function init_ping_switches {
 function main {
 		handle_args $@
 
+		
 		if [[ $TRY_TO_FIX = 1 ]] && [[ $EUID != 0 ]];then
 				exec sudo bash $0 $@
+		fi
+
+		if ip addr | grep tun >$REDIRECT_DEST;then
+				log "${YELLOW}please turn off your vpn${NC}" $DEFAULT_LOG_LVL
 		fi
 
 		init_determine_target_interfaces
