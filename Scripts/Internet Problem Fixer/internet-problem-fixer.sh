@@ -26,11 +26,16 @@ Options:\n\
 \t-n\tno fix: don't try to fix ( eliminate the requirement for the script to be root )\n\
 \t-i INTERFACE_NAMES\tinclude interface: troubleshoot the provided interfaces only if used -x will be ignored\n\
 \t-x INTERFACE_NAMES\texclude interface: ignore the provided interfaces\n\
+\t-p PING_OPTION=VALUE,..\tpass arbitrary switches to pings used in the script, seperated by ',' and wrappen in double qoutes '\"'\n\
+\t\treserved switches: (-A, -I, -c, -W) there are other switches to set arbitrary value for -c, -W\n\
+\t-W TIMEOUT\tset value for -W switch of ping\n\
+\t-c COUNT\tset value for -c switch of ping\n\
 \n\
 Usage Examples:\n\
 \t$0 -i eth0,wlan0\ttroubleshoots only eth0 and wlan0 interfaces\n\
 \t$0 -n -i eth0\tdoesn't try to fix eth0 just shows the states instead\n\
-\t$0 -x tun0,lo\tignore tun0 and lo
+\t$0 -x tun0,lo\tignore tun0 and lo\n\
+\t$0 -p \"-t=64,-r\"\tput -t 64 -r before other ping switches
 "
 
 #google dns primary and secondary, example.com, google.com
@@ -471,7 +476,7 @@ function try_to_fix_interface {
 
 function handle_args {
 
-		while getopts "vdhni:x:" name;do
+		while getopts "vdhni:x:p:W:c:" name;do
 					case $name in
 					v)
 							CURRENT_LOG_LVL=$VERBOSE_LOG_LVL;;
@@ -486,6 +491,12 @@ function handle_args {
 							INCLUDED_INTERFACES=$OPTARG;;
 					x)
 							EXCLUDED_INTERFACES=$OPTARG;;
+					p) 		
+							PING_SWITCHES=$(echo $OPTARG | tr '=' ' ' | tr ',' ' ');;
+					W) 		
+							TIMEOUT=$OPTARG;;
+					c) 		
+							PING_COUNT=$OPTARG;;
 					?)    
 							echo -e $HELP
 							exit 1;;
