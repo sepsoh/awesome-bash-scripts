@@ -26,11 +26,16 @@ Options:\n\
 \t-n\tno fix: don't try to fix ( eliminate the requirement for the script to be root )\n\
 \t-i INTERFACE_NAMES\tinclude interface: troubleshoot the provided interfaces only if used -x will be ignored\n\
 \t-x INTERFACE_NAMES\texclude interface: ignore the provided interfaces\n\
+\t-p PING_OPTION=VALUE,..\tpass arbitrary switches to pings used in the script, seperated by ',' and wrappen in double qoutes '\"'\n\
+\t\treserved switches: (-A, -I, -c, -W) there are other switches to set arbitrary value for -c, -W\n\
+\t-W TIMEOUT\tset value for -W switch of ping\n\
+\t-c COUNT\tset value for -c switch of ping\n\
 \n\
 Usage Examples:\n\
 \t$0 -i eth0,wlan0\ttroubleshoots only eth0 and wlan0 interfaces\n\
 \t$0 -n -i eth0\tdoesn't try to fix eth0 just shows the states instead\n\
-\t$0 -x tun0,lo\tignore tun0 and lo
+\t$0 -x tun0,lo\tignore tun0 and lo\n\
+\t$0 -p \"-t=64,-r\"\tput -t 64 -r before other ping switches
 "
 
 #google dns primary and secondary, example.com, google.com
@@ -93,6 +98,16 @@ DEBUG_LOG_LVL=100
 
 CURRENT_LOG_LVL=$DEFAULT_LOG_LVL
 
+#COMMANDNAME_SWITCHES are used along each COMMANDNAME, this is portability (to test if different switches work on current machine)
+#init_COMMANDNAME_switches will be called at the start of the script and fill COMMANDNAME_SWITCHES
+#these switches are currently assumed to work for ping: -c, -I, -W
+#switches that will be used if availbale: -A
+PING_SWITCHES=""
+
+#assumed global variables typically to test things when an actual valid one is not availbale
+ASSUMED_RELIABLE_IP="127.0.0.1"
+#WARNING! ASSUMED_RELIABLE_IP must be reachable via ASSUMED_AVAILABLE_INTERFACE_NAME
+ASSUMED_AVAILABLE_INTERFACE_NAME="lo"
 
 function log {
  	string="$1"
@@ -145,7 +160,7 @@ function check_internet_connectivity {
 		OLD_IFS=$IFS
 		IFS=" "
 		for host in ${ping_dest[@]};do
-				if ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
+				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
 						PRIVATE_IP_STATE=1
 						LAN_STATE=1
@@ -177,7 +192,7 @@ function check_intranet_connectivity {
 		OLD_IFS=$IFS
 		IFS=" "
 		for host in ${ping_dest[@]};do
-				if ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
+				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
 						PRIVATE_IP_STATE=1
 						LAN_STATE=1
@@ -204,7 +219,7 @@ function check_lan_connectivity {
 		OLD_IFS=$IFS
 		IFS=" "
 		for host in $default_gws;do
-				if ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
+				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
 						PRIVATE_IP_STATE=1
 						LAN_STATE=1
@@ -245,7 +260,7 @@ function check_dns {
 		done		
 		IFS=$OLD_IFS
 
-		log "${RED}[-] DNS doesn\'t work${NC}" $VERBOSE_LOG_LVL
+		log "${RED}[-] DNS doesn't work${NC}" $VERBOSE_LOG_LVL
 		DNS_STATE=0
 		return 1
 }
@@ -260,7 +275,7 @@ function check_interface_self_connectivity {
 		OLD_IFS=$IFS
 		IFS=$' '
 		for ip in $interface_ips;do
-				ping -W $TIMEOUT -c $PING_COUNT -I $interface_name $ip >&$REDIRECT_DEST
+				ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $ip >&$REDIRECT_DEST
 				errno=$?
 				if [[ $errno != 0 ]];then
 						log "${RED}[-] $ip is not  reachable via $interface_name${NC}" $VERBOSE_LOG_LVL
@@ -461,7 +476,7 @@ function try_to_fix_interface {
 
 function handle_args {
 
-		while getopts "vdhni:x:" name;do
+		while getopts "vdhni:x:p:W:c:" name;do
 					case $name in
 					v)
 							CURRENT_LOG_LVL=$VERBOSE_LOG_LVL;;
@@ -476,6 +491,12 @@ function handle_args {
 							INCLUDED_INTERFACES=$OPTARG;;
 					x)
 							EXCLUDED_INTERFACES=$OPTARG;;
+					p) 		
+							PING_SWITCHES=$(echo $OPTARG | tr '=' ' ' | tr ',' ' ');;
+					W) 		
+							TIMEOUT=$OPTARG;;
+					c) 		
+							PING_COUNT=$OPTARG;;
 					?)    
 							echo -e $HELP
 							exit 1;;
@@ -575,7 +596,7 @@ function remove_list_from_list {
 }
 
 
-function determine_target_interfaces {
+function init_determine_target_interfaces {
 
 		if ! [ -z $INCLUDED_INTERFACES ];then
 				TARGET_INTERFACES="$INCLUDED_INTERFACES"
@@ -619,14 +640,31 @@ function determine_target_interfaces {
 
 }
 
+function init_ping_switches {
+		#-A Adaptive ping
+		if ping -c 1 -A $ASSUMED_RELIABLE_IP >&$REDIRECT_DEST;then
+				PING_SWITCHES=$PING_SWITCHES" -A "
+		else
+				log "${BLUE} -A is not available for ping, the script will slow down drastically${NC}" $VERBOSE_LOG_LVL
+		fi
+
+		log "ping options: $PING_SWITCHES" $DEBUG_LOG_LVL
+ }
+
 function main {
 		handle_args $@
 
+		
 		if [[ $TRY_TO_FIX = 1 ]] && [[ $EUID != 0 ]];then
 				exec sudo bash $0 $@
 		fi
 
-		determine_target_interfaces
+		if ip addr | grep tun >$REDIRECT_DEST;then
+				log "${YELLOW}please turn off your vpn${NC}" $DEFAULT_LOG_LVL
+		fi
+
+		init_determine_target_interfaces
+		init_ping_switches
 
 		log "${YELLOW}[*] interfaces to troubleshoot: $TARGET_INTERFACES${NC}" $VERBOSE_LOG_LVL
 		if [[ $CURRENT_LOG_LVL -ge $DEBUG_LOG_LVL ]];then
