@@ -99,7 +99,7 @@ DEBUG_LOG_LVL=100
 CURRENT_LOG_LVL=$DEFAULT_LOG_LVL
 
 #COMMANDNAME_SWITCHES are used along each COMMANDNAME, this is portability (to test if different switches work on current machine)
-#INIT_COMMANDNAME will be called at the start of the script and fill COMMANDNAME_SWITCHES
+#init_COMMANDNAME_switches will be called at the start of the script and fill COMMANDNAME_SWITCHES
 #these switches are currently assumed to work for ping: -c, -I, -W
 #switches that will be used if availbale: -A
 PING_SWITCHES=""
