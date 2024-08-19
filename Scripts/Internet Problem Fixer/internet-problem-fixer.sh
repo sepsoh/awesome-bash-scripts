@@ -642,7 +642,7 @@ function init_determine_target_interfaces {
 
 function init_ping_switches {
 		#-A Adaptive ping
-		if ping -c 1 -A $ASSUMED_RELIABLE_IP >$REDIRECT_DEST;then
+		if ping -c 1 -A $ASSUMED_RELIABLE_IP >&$REDIRECT_DEST;then
 				PING_SWITCHES=$PING_SWITCHES" -A "
 		else
 				log "${BLUE} -A is not available for ping, the script will slow down drastically${NC}" $VERBOSE_LOG_LVL
