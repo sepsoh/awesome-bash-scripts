@@ -229,7 +229,7 @@ function check_network_states_and_display {
 		INTERFACE_MSG="network interface"
 		PRIVATE_IP_MSG="private ip usability"
 		LAN_MSG="LAN reachability"
-		DNS_MSG="DNS ( not currently interface dependent )"
+		DNS_MSG="DNS"
 		INTRANET_MSG="Intranet reachability"
 		INTERNET_MSG="Internet reachability"
 
