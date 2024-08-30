@@ -27,3 +27,4 @@ You can also use each script individually.
 | [abs.abs-update](<Scripts/ABS Update>)               | Update me to latest version                                              |
 | [abs.abs-uninstall](<Scripts/ABS Uninstall>)         | Uninstall me and delete all sctipts                                      |
 | [abs.internet-problem-fixer](<Scripts/Internet Problem Fixer>) | Detect and fix common internet problems                        |
+| [abs.internet-status.checker.sh](<Scripts/Internet Status Checker>) | Check internet connectivity status                       |
