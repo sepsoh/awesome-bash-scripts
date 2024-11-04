@@ -38,6 +38,9 @@ Usage Examples:\n\
 \t$0 -p \"-t=64,-r\"\tput -t 64 -r before other ping switches
 "
 
+#FILE variables, used to load information such as excluded interfaces
+EXCLUDED_INTERFACES_FILE="interface_ignore.txt"
+
 #google dns primary and secondary, example.com, google.com
 INTERNET_IPV4S=("8.8.8.8" "8.8.4.4" "93.184.215.14" "142.250.184.206")
 INTERNET_DOMAINS=("google.com" "example.com" "github.com")
@@ -485,16 +488,7 @@ function handle_args {
 
 }
 
-function did_interface_improve {
-		
-		
-		#if we don't try to fix the interface the states won't change
-		if [[ $TRY_TO_FIX = 0 ]] && [[ $INTERFACE_STATE != -1 ]];then
-				echo 0
-				return
-		fi
-		
-		#if all states are good echo 0 to make the main loop to skip this interface
+function is_current_interface_ok {
 		if {
 				[[ $INTERFACE_STATE = 1 ]] && 
 				[[ $PRIVATE_IP_STATE = 1 ]] &&
@@ -503,10 +497,20 @@ function did_interface_improve {
 				[[ $INTRANET_STATE = 1 ]] &&
 				[[ $INTERNET_STATE = 1 ]]
 		};then
-				echo 0 	
+				echo 1
 		fi
 
+		echo 0
+}
 
+function did_interface_improve {
+			
+		#if we don't try to fix the interface the states won't change
+		if [[ $TRY_TO_FIX = 0 ]] && [[ $INTERFACE_STATE != -1 ]];then
+				echo 0
+				return
+		fi
+		
 
 		if [[ $INTERFACE_STATE > $LAST_INTERFACE_STATE ]] || [[ $INTERFACE_STATE = -1 ]];then
 				echo 1
@@ -629,7 +633,19 @@ function init_ping_switches {
 		fi
 
 		log "ping options: $PING_SWITCHES" $DEBUG_LOG_LVL
- }
+}
+
+function init_load_exclude_interface {
+		log "${BLUE}exclude interfaces before loading from $EXCLUDED_INTERFACES_FILE:$EXCLUDED_INTERFACES${NC}" $DEBUG_LOG_LVL
+
+		#add loaded exclude list to the EXCLUDED_INTERFACES
+		EXCLUDED_INTERFACES="$(cat $EXCLUDED_INTERFACES_FILE | tr $'\n' $INTERFACE_LIST_DELIMITER)${EXCLUDED_INTERFACES}"
+
+		log "${BLUE}exclude interfaces after loading from $EXCLUDED_INTERFACES_FILE:$EXCLUDED_INTERFACES${NC}" $DEBUG_LOG_LVL
+}
+
+#start of wifi support 
+#end of wifi support
 
 function main {
 		handle_args $@
@@ -642,7 +658,7 @@ function main {
 		if ip addr | grep tun >$REDIRECT_DEST;then
 				log "${YELLOW}please turn off your vpn${NC}" $DEFAULT_LOG_LVL
 		fi
-
+		init_load_exclude_interface
 		init_determine_target_interfaces
 		init_ping_switches
 
@@ -658,7 +674,7 @@ function main {
 				#resetting the states for the current iteration
 				set_network_states -1
 				update_last_network_states
-				while [[ $(did_interface_improve) = 1 ]];do
+				while [[ $(did_interface_improve) = 1 ]] && [[ $(is_current_interface_ok) = 0 ]];do
 						update_last_network_states
 						log "${YELLOW}[*] troubleshooting $interface${NC}" $DEFAULT_LOG_LVL
 						CURRENT_INTERFACE=$interface
