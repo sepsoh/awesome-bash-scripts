@@ -289,6 +289,23 @@ function check_interface_self_connectivity {
 		INTERFACE_STATE=1
 		return 0
 }
+
+function echo_state {
+		state="$1"
+		msg="$2"
+
+		#interface
+		if [[ $state = 1 ]];then
+				log "${GREEN}[+] $msg${NC}" $DEFAULT_LOG_LVL
+		elif [[ $state = -1 ]];then
+				log "[?] $msg" $DEFAULT_LOG_LVL
+		else
+				log "${RED}[-] $msg${NC}" $DEFAULT_LOG_LVL
+		fi
+
+
+}
+
 function check_network_states {
 		INTERFACE_MSG="network interface"
 		PRIVATE_IP_MSG="private ip usability"
@@ -301,59 +318,22 @@ function check_network_states {
 		log "current network stats of $CURRENT_INTERFACE:" $DEFAULT_LOG_LVL
 
 		#interface
-		if [[ $INTERFACE_STATE = 1 ]];then
-				log "${GREEN}[+] $INTERFACE_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $INTERFACE_STATE = -1 ]];then
-				log "[?] $INTERFACE_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $INTERFACE_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
+		echo_state "$INTERFACE_STATE" "$INTERFACE_MSG"
 
 		#private ip
-		if [[ $PRIVATE_IP_STATE = 1 ]];then
-				log "${GREEN}[+] $PRIVATE_IP_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $PRIVATE_IP_MSG = -1 ]];then
-				log "[?] $PRIVATE_IP_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $PRIVATE_IP_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
+		echo_state "$PRIVATE_IP_STATE" "$PRIVATE_IP_MSG"
 
 		#LAN
-		if [[ $LAN_STATE = 1 ]];then
-				log "${GREEN}[+] $LAN_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $LAN_STATE = -1 ]];then
-				log "[?] $LAN_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $LAN_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
+		echo_state "$LAN_STATE" "$LAN_MSG"
 
 		#DNS
-		if [[ $DNS_STATE = 1 ]];then
-				log "${GREEN}[+] $DNS_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $DNS_STATE = -1 ]];then
-				log "[?] $DNS_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $DNS_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
-
+		echo_state "$DNS_STATE" "$DNS_MSG"
 
 		#Intranet
-		if [[ $INTRANET_STATE = 1 ]];then
-				log "${GREEN}[+] $INTRANET_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $INTRANET_STATE = -1 ]];then
-				log "[?] $INTRANET_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $INTRANET_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
+		echo_state "$INTRANET_STATE" "$INTRANET_MSG"
 		
 		#Internet
-		if [[ $INTERNET_STATE = 1 ]];then
-				log "${GREEN}[+] $INTERNET_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $INTERNET_STATE = -1 ]];then
-				log "[?] $INTERNET_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $INTERNET_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
+		echo_state "$INTERNET_STATE" "$INTERNET_MSG"
 		
 		log "${YELLOW}$LINE_DELIMITER${NC}" $DEFAULT_LOG_LVL
 }
