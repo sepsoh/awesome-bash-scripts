@@ -306,7 +306,7 @@ function echo_state {
 
 }
 
-function check_network_states {
+function echo_network_states {
 		INTERFACE_MSG="network interface"
 		PRIVATE_IP_MSG="private ip usability"
 		LAN_MSG="LAN reachability"
@@ -664,7 +664,7 @@ function main {
 						CURRENT_INTERFACE=$interface
 						
 						check_all_on_interface $interface
-						check_network_states
+						echo_network_states
 						
 						if [[ $TRY_TO_FIX = 1 ]];then
 								try_to_fix_interface $interface
