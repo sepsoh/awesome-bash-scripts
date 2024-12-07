@@ -19,6 +19,13 @@ abs_install(){
 		destination_dir="$2"
 		prefix="$3"
 
+		prefix_of_package=""
+		if [ -z $prefix ];then
+				prefix_of_package="$GLOBAL_PREFIX."
+		else
+				prefix_of_package="$GLOBAL_PREFIX.$prefix."
+		fi
+
 		# Find all scripts in the source directory and its subdirectories
 		script_files=$(find "$source_dir" -type f -name "*.sh")
 
@@ -26,7 +33,7 @@ abs_install(){
 		OLD_IFS="$IFS"
 		IFS=$'\n';
 		for script in $script_files; do
-			new_name="abs.$(basename "$script" .sh)"
+			new_name="${prefix_of_package}$(basename "$script" .sh)"
 			sudo chmod +x "$script";
 			sudo cp -p "$script" "$destination_dir/$new_name";
 			echo "installed : $new_name" 
