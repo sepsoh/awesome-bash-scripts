@@ -31,6 +31,11 @@ set_log_lvl "debug"
 CURRENT_LOG_LEVEL=$LOG_LEVEL_DEBUG
 ```
 
+## Removing times from logs
+```
+DATE_FMT=""
+```
+
 ## setting another color for a log level
 colors are imported from abs.lib.colors
 ```
