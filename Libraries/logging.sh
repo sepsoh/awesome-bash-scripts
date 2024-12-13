@@ -118,6 +118,6 @@ function log() {
 
 
 		if [[ $CURRENT_LOG_LVL -le $lvl ]];then
-				printf "$print_color%s: %s$Color_Off" "$(date +"$DATE_FMT")" "$msg" >&$dst
+				printf "$print_color%s %s$Color_Off\n" "$(date +"$DATE_FMT")" "$msg" >&$dst
 		fi
 }
