@@ -1,4 +1,4 @@
-  # Dependency Check Script  
+# Dependency Check Script  
   
 This script provides functions for verifying system dependencies, particularly for Bash-based environments. It supports checking for both commands and library dependencies (library checking is not yet implemented).  
   
@@ -60,6 +60,31 @@ Reads dependencies from a file and checks if each dependency’s command is avai
 # git,git  
   
 depcheck_cmd "deps.txt"  
+```  
+  
+---  
+
+#### 2. `depcheck_cmd_fromstr(str, dep_attr_delim=",")`  
+  
+**Purpose**:  
+Reads dependencies from a file and checks if each dependency’s command is available in the system.  
+  
+**Parameters**:  
+1. `str`: The string containing dependencies (each line formatted as `"name,cmd"`).  
+2. `dep_attr_delim` (Optional): The delimiter for separating dependency attributes (default: `","`).  
+  
+**Behavior**:  
+similar to depcheck_cmd()
+
+**Example**:  
+```bash  
+dependancies="\
+curl,curl
+unzip,unzip"
+
+if ! depcheck_cmd_fromstr "$dependancies"; then
+		exit $? #if dependancies are not met, exit
+fi  
 ```  
   
 ---  
