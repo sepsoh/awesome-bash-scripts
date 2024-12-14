@@ -20,8 +20,13 @@ CURRENT_LOG_LVL=$LOG_LVL_INFO
 
 DEFAULT_LOG_DST="1"
 
-#set_log_lvl(string_lvl)
-#either of "debug", "info", "warning", "error", "critical"
+# set_log_lvl(string_lvl)
+# Sets the current logging level based on a string input.
+# Parameters:
+#   lvl - The log level to set ("debug", "info", "warning", "error", "critical").
+# Behavior:
+#   Updates the CURRENT_LOG_LVL variable to match the corresponding numeric log level.
+#   If an invalid level is passed, no changes are made, and the function exits silently.
 function set_log_lvl(){
 		lvl="$1"
 		case "$lvl" in
@@ -57,9 +62,15 @@ function set_log_lvl(){
 }
 
 
-#_do_log(log_lvl)
-#not meant to be called by the user
-#converts the log level to the corresponding color
+# log_lvl_to_color(log_lvl)
+# Converts a numeric log level to its corresponding color code.
+# Parameters:
+#   lvl - The numeric log level to convert.
+# Returns:
+#   The color code associated with the provided log level.
+# Behavior:
+#   Prints the appropriate color for the given log level to stdout.
+#   If the log level is invalid, no output is produced.
 function log_lvl_to_color(){
 		lvl="$1"
 
@@ -104,8 +115,16 @@ function log_lvl_to_color(){
 }
 
 
-#log(lvl,msg,dst=&1)
-#logs the message if CURRENT_LOG_LVL <= lvl
+# log(lvl, msg, dst=&1)
+# Logs a message if the current logging level is less than or equal to the provided log level.
+# Parameters:
+#   lvl - The numeric log level of the message (LOG_LVL_DEBUG, LOG_LVL_INFO, etc.).
+#   msg - The message to log.
+#   dst - (Optional) The file descriptor to log to (default: stdout).
+# Behavior:
+#   Logs the message to the specified destination if CURRENT_LOG_LVL <= lvl.
+#   The log message is color-coded and includes a timestamp.
+#   To remote the timestamp from the message 'DATE_FMT=""'
 function log() {
 		lvl="$1"
 		msg="$2"
