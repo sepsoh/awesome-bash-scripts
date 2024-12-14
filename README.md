@@ -28,14 +28,14 @@ You can also use each script individually.
 | [abs.abs-uninstall](<Scripts/ABS Uninstall>)                        | Uninstall me and delete all sctipts                                      |
 | [abs.internet-problem-fixer](<Scripts/Internet Problem Fixer>)      | Detect and fix common internet problems                                  |
 | [abs.internet-status.checker.sh](<Scripts/Internet Status Checker>) | Check internet connectivity status                                       |
-### Provided Libraries
+### Provided Libraries :
 | Library                                  | Description                                     |
 | ---------------------------------------- | ----------------------------------------------- |
 | [abs.lib.colors](<Libraries/colors>)     | ANSI color codes to style terminal output       |
 | [abs.lib.depcheck](<Libraries/depcheck>) | Functions for verifying system dependencies     |
 | [abs.lib.logging](<Libraries/logging>)   | Simple and customizable logging system          |
 | [abs.lib.list](<Libraries/list>)         | Functions for manipulating and processing lists |
-#### Importing Libraries:
+#### Importing Libraries
 
 To use a library in your script, simply source it as shown below:
 ```bash
