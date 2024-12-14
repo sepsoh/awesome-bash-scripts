@@ -1,29 +1,7 @@
-  # Dependency Check Script  
+
+# Dependency Check Script  
   
 This script provides functions for verifying system dependencies, particularly for Bash-based environments. It supports checking for both commands and library dependencies (library checking is not yet implemented).  
-  
----  
-  
-## Features  
-  
-1. **Command Dependency Verification**:  
-   - Checks if required commands are available in the system.  
-   - Reads dependencies from a file and tests their presence using the `type` command.  
-  
-2. **Flexible Dependency Format**:  
-   - Supports custom delimiters for specifying dependency attributes.  
-  
-3. **Logging Integration**:  
-   - Logs messages at various levels (e.g., ERROR, DEBUG) using the integrated logging library (`abs.lib.logging`).  
-  
----  
-  
-## Prerequisites  
-  
-- Bash shell environment.  
-- The `abs.lib.logging` library for logging functionality.  
-  
----  
   
 ## Usage  
   
@@ -38,7 +16,7 @@ This script provides functions for verifying system dependencies, particularly f
   
 ### Functions  
   
-#### 1. `depcheck_cmd(filename, dep_attr_delim=",")`  
+#### depcheck_cmd(filename, dep_attr_delim=",")  
   
 **Purpose**:  
 Reads dependencies from a file and checks if each dependency’s command is available in the system.  
@@ -56,15 +34,16 @@ Reads dependencies from a file and checks if each dependency’s command is avai
 **Example**:  
 ```bash  
 # Contents of deps.txt:  
-# curl,curl  
+# dns-utils,dig  
 # git,git  
+# nodejs,node
   
 depcheck_cmd "deps.txt"  
 ```  
   
 ---  
   
-#### 2. `depcheck_lib()` (TODO)  
+#### depcheck_lib() (TODO)  
   
 **Purpose**:  
 Placeholder for a function to check library dependencies. Currently not implemented.  
@@ -79,7 +58,7 @@ depcheck_lib  # Outputs: "not implemented yet"
   
 ---  
   
-#### 3. `_dep_attr_extract(dep, pos, delim=",")`  
+#### \_dep_attr_extract(dep, pos, delim=",")  
   
 **Purpose**:  
 Extracts a specific attribute from a dependency string based on its position and delimiter.  
@@ -94,42 +73,6 @@ The extracted attribute as a string.
   
 **Example**:  
 ```bash  
-name=$(_dep_attr_extract "nodejs,node" $DEP_NAME_POS)  
+name=$(_dep_attr_extract "nodejs,node" $DEP_CMD_POS)  
 echo $name  # Outputs: node  
 ```  
-  
----  
-  
-## Dependency File Format  
-  
-The dependency file should contain one dependency per line, formatted as:  
-```  
-name,cmd  
-```  
-Where:  
-- `name` is the dependency’s human-readable name.  
-- `cmd` is the command used to verify the dependency’s presence.  
-  
-**Example File (deps.txt)**:  
-```  
-dns-utils,dig  
-git,git  
-nodejs,node  
-```  
-  
----  
-  
-## Notes  
-  
-1. **Custom Delimiters**:  
-   - If your dependency attributes use a different delimiter (e.g., `":"`), specify it when calling `depcheck_cmd`.  
-  
-2. **Error Handling**:  
-   - The script logs missing dependencies and returns an error status if any are not found.  
-  
-3. **Library Dependency Checking**:  
-   - The `depcheck_lib` function is a placeholder and needs implementation.  
-  
-  
-  
-
