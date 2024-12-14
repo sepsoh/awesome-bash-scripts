@@ -4,9 +4,9 @@ logs the message if CURRENT_LOG_LVL <= lvl
 
 ```bash
 #log a message
-log $LOG_LVL_INFO "some msg"
+log $LOG_LVL_INFO "[$0]: some msg" #better to have $0 in your logs
 #log a message to ~/somefile
-log $LOG_LVL_INFO "some msg" "~/somefile"
+log $LOG_LVL_INFO "[$0]: some msg" "~/somefile"
 ```
 
 ## Log levels
@@ -41,3 +41,4 @@ colors are imported from abs.lib.colors
 ```
 LOG_CLR_CRITICAL=$Cyan
 ```
+
