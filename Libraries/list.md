@@ -3,7 +3,7 @@
 This script provides two key functions for manipulating and processing lists represented as strings:  
 1.  **`remove_list_from_list`**: Removes specific elements (provided as a separate list) from a main list.  
 2. **`scape_sed_special_chars`**: Escapes special characters in a string for safe usage with `sed`.  
-## remove_list_from_list  
+## remove_list_from_list(list, list_delimiter, remove_list, remove_list_delimiter)  
   
 ### Description:  
 Removes all occurrences of elements in a `remove_list` from a `list`. Both lists are provided as single strings with delimiters.  
@@ -27,7 +27,7 @@ echo "$updated_list"  # Outputs: apple,orange,
   
 ---  
   
-## scape_sed_special_chars  
+## scape_sed_special_chars(string_to_scape)  
 ### Description  
 Escapes special characters in a string so that it can be safely used in `sed` commands.  
   
