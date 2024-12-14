@@ -48,6 +48,34 @@ function depcheck_cmd(){
 		return 0
 }
 
+# Function: depcheck_cmd_fromstr
+# Description:
+#   Reads dependencies from a string and checks if each dependency is available in the system using 'type'.
+#   Each line should include both the package name of the dependancy and the command to test for availablility
+#   Each entry should be in the format of (name${delim}cmd) ->--default delim----> (name,cmd)
+#   Use this function if the dependancy provides a command, if not, use depcheck_lib()
+# Parameters:
+#   $1 - Dependencies string.
+#   $2 - Dependency attribute delimiter (default:',').
+function depcheck_cmd_fromstr(){
+		deps="$1"
+		dep_attr_delim="${2:-$DEP_ATTR_DELIM}"
+
+		while read -r line;do
+				cmd="$(_dep_attr_extract "$line" "$DEP_CMD_POS" "$dep_attr_delim")"
+				log $LOG_LVL_DEBUG "[$0]: checking cmd $cmd"
+
+				if ! type $cmd &>/dev/null;then
+						log "$LOG_LVL_ERROR" "[$0]: missing dependancy : $(_dep_attr_extract "$line" "$DEP_NAME_POS" "$dep_attr_delim")"
+						IFS=$"$OLD_IFS"
+						return 1
+				fi
+
+		done <<<"$deps"
+
+		return 0
+}
+
 #TODO
 function depcheck_lib(){
 		log $CURRENT_LOG_LVL "not implemented yet"
