@@ -29,16 +29,16 @@ function depcheck_cmd(){
 
 		deps=""
 		if ! deps=$(cat "$filename" 2> /dev/null);then
-				log $LOG_LVL_ERROR "can't read file: $filename"
+				log $LOG_LVL_ERROR "[$0]: can't read file: $filename"
 				return 1
 		fi
 
 		while read -r line;do
 				cmd="$(_dep_attr_extract "$line" "$DEP_CMD_POS" "$dep_attr_delim")"
-				log $LOG_LVL_DEBUG "checking cmd $cmd"
+				log $LOG_LVL_DEBUG "[$0]: checking cmd $cmd"
 
 				if ! type $cmd &>/dev/null;then
-						log "$LOG_LVL_ERROR" "missing dependancy : $(_dep_attr_extract "$line" "$DEP_NAME_POS" "$dep_attr_delim")"
+						log "$LOG_LVL_ERROR" "[$0]: missing dependancy : $(_dep_attr_extract "$line" "$DEP_NAME_POS" "$dep_attr_delim")"
 						IFS=$"$OLD_IFS"
 						return 1
 				fi
