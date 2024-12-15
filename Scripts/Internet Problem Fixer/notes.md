@@ -4,6 +4,7 @@
 - detect and igore VPN interfaces by default  
 - need to seperate protocol availability, and connectivity to different segments of networks  
 - need to be able to interpret icmp responses (destination forbidden/unreachable)    
+- use abs.lib for logging and dependancy checks  
 # things to check for in the future    
 - check default route src ip ( need to ping that ip specifically )    
 - check mtu    
