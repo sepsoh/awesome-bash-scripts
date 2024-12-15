@@ -30,6 +30,7 @@ Options:\n\
 \t\treserved switches: (-A, -I, -c, -W) there are other switches to set arbitrary value for -c, -W\n\
 \t-W TIMEOUT\tset value for -W switch of ping\n\
 \t-c COUNT\tset value for -c switch of ping\n\
+\t-f EXCLUDED_INTERFACES_FILE\tname of the file to load from which the interface names to ignore\n
 \n\
 Usage Examples:\n\
 \t$0 -i eth0,wlan0\ttroubleshoots only eth0 and wlan0 interfaces\n\
@@ -459,7 +460,7 @@ function try_to_fix_interface {
 
 function handle_args {
 
-		while getopts "vdhni:x:p:W:c:" name;do
+		while getopts "vdhni:x:p:W:c:f:" name;do
 					case $name in
 					v)
 							CURRENT_LOG_LVL=$VERBOSE_LOG_LVL;;
@@ -471,15 +472,17 @@ function handle_args {
 					n)
 							TRY_TO_FIX=0;;
 					i)
-							INCLUDED_INTERFACES=$OPTARG;;
+							INCLUDED_INTERFACES="$OPTARG";;
 					x)
-							EXCLUDED_INTERFACES=$OPTARG;;
+							EXCLUDED_INTERFACES="$OPTARG";;
 					p) 		
-							PING_SWITCHES=$(echo $OPTARG | tr '=' ' ' | tr ',' ' ');;
+							PING_SWITCHES=$(echo "$OPTARG" | tr '=' ' ' | tr ',' ' ');;
 					W) 		
-							TIMEOUT=$OPTARG;;
+							TIMEOUT="$OPTARG";;
 					c) 		
-							PING_COUNT=$OPTARG;;
+							PING_COUNT="$OPTARG";;
+					f)
+							EXCLUDED_INTERFACES_FILE="$OPTARG";;
 					?)    
 							echo -e $HELP
 							exit 1;;
