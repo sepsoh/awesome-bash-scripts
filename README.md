@@ -44,7 +44,7 @@ source abs.lib.somelib
 ```
 #### ShellCheck Integration
 
-If you're using ShellCheck to lint your scripts, specify the library's path to ensure accurate checks(default installation path of ABS is /usr/bin/):
+If you're using ShellCheck for autocompletion/analyse your scripts, specify the library's path to ensure accurate checks(default installation path of ABS is /usr/bin/):
 ```bash
 # shellcheck source=/usr/bin/abs.lib.somelib
 source abs.lib.somelib
