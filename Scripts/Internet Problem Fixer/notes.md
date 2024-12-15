@@ -14,7 +14,7 @@
 - check if port 80 works    
 - detect if dhclient didnt managed to renew the ip    
 - if icmp is not available:    
-    -test tcp and http      
+    - test tcp and http      
     
     
     
