@@ -1,9 +1,14 @@
 #!/bin/bash
+# shellcheck source=/usr/bin/abs.lib.depcheck
+source abs.lib.depcheck
 repo="sepsoh/awesome-bash-scripts"
+dependancies="\
+curl,curl
+unzip,unzip"
 
-# Check for required tools
-command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but it's not installed. Aborting."; exit 1; }
-command -v unzip >/dev/null 2>&1 || { echo >&2 "unzip is required but it's not installed. Aborting."; exit 1; }
+if ! depcheck_cmd_fromstr "$dependancies"; then
+		exit $?
+fi
 
 function download_latest_release() {
   # download the latest zip file of repo in the /tmp then extract it.
@@ -18,6 +23,7 @@ function update_tools(){
   rm /tmp/awesome-bash-scripts.zip
   rm -rf /tmp/awesome-bash-scripts-main
 }
+
 
 echo "Latest release for $repo: $latest_release"
 echo "Downloading and processing the latest release..."

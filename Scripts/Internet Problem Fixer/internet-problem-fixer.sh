@@ -21,22 +21,26 @@ TRY_TO_FIX=1
 HELP="\
 Internet problem fixer\\n\
 Options:\n\
-\t-v\tverbose\n\
-\t-d\tdebug: redirects the used commands to stdout\n\
-\t-n\tno fix: don't try to fix ( eliminate the requirement for the script to be root )\n\
-\t-i INTERFACE_NAMES\tinclude interface: troubleshoot the provided interfaces only if used -x will be ignored\n\
-\t-x INTERFACE_NAMES\texclude interface: ignore the provided interfaces\n\
-\t-p PING_OPTION=VALUE,..\tpass arbitrary switches to pings used in the script, seperated by ',' and wrappen in double qoutes '\"'\n\
-\t\treserved switches: (-A, -I, -c, -W) there are other switches to set arbitrary value for -c, -W\n\
-\t-W TIMEOUT\tset value for -W switch of ping\n\
-\t-c COUNT\tset value for -c switch of ping\n\
+\t-v\t\t\t\tverbose\n\
+\t-d\t\t\t\tdebug: redirects the used commands to stdout\n\
+\t-n\t\t\t\tno fix: don't try to fix ( eliminate the requirement for the script to be root )\n\
+\t-i INTERFACE_NAMES\t\tinclude interface: troubleshoot the provided interfaces only if used -x will be ignored\n\
+\t-x INTERFACE_NAMES\t\texclude interface: ignore the provided interfaces\n\
+\t-p PING_OPTION=VALUE,..\t\tpass arbitrary switches to pings used in the script, seperated by ',' and wrappen in double qoutes '\"'\n\
+\t\t*reserved switches: (-A, -I, -c, -W) there are other switches to set arbitrary value for -c, -W\n\
+\t-W TIMEOUT\t\t\tset value for -W switch of ping\n\
+\t-c COUNT\t\t\tset value for -c switch of ping\n\
+\t-f EXCLUDED_INTERFACES_FILE\tname of the file to load from which the interface names to ignore\n
 \n\
 Usage Examples:\n\
 \t$0 -i eth0,wlan0\ttroubleshoots only eth0 and wlan0 interfaces\n\
-\t$0 -n -i eth0\tdoesn't try to fix eth0 just shows the states instead\n\
-\t$0 -x tun0,lo\tignore tun0 and lo\n\
+\t$0 -n -i eth0\t\tdoesn't try to fix eth0 just shows the states instead\n\
+\t$0 -x tun0,lo\t\tignore tun0 and lo\n\
 \t$0 -p \"-t=64,-r\"\tput -t 64 -r before other ping switches
 "
+
+#FILE variables, used to load information such as excluded interfaces
+EXCLUDED_INTERFACES_FILE="interface_ignore.txt"
 
 #google dns primary and secondary, example.com, google.com
 INTERNET_IPV4S=("8.8.8.8" "8.8.4.4" "93.184.215.14" "142.250.184.206")
@@ -289,7 +293,24 @@ function check_interface_self_connectivity {
 		INTERFACE_STATE=1
 		return 0
 }
-function check_network_states {
+
+function echo_state {
+		state="$1"
+		msg="$2"
+
+		#interface
+		if [[ $state = 1 ]];then
+				log "${GREEN}[+] $msg${NC}" $DEFAULT_LOG_LVL
+		elif [[ $state = -1 ]];then
+				log "[?] $msg" $DEFAULT_LOG_LVL
+		else
+				log "${RED}[-] $msg${NC}" $DEFAULT_LOG_LVL
+		fi
+
+
+}
+
+function echo_network_states {
 		INTERFACE_MSG="network interface"
 		PRIVATE_IP_MSG="private ip usability"
 		LAN_MSG="LAN reachability"
@@ -301,59 +322,22 @@ function check_network_states {
 		log "current network stats of $CURRENT_INTERFACE:" $DEFAULT_LOG_LVL
 
 		#interface
-		if [[ $INTERFACE_STATE = 1 ]];then
-				log "${GREEN}[+] $INTERFACE_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $INTERFACE_STATE = -1 ]];then
-				log "[?] $INTERFACE_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $INTERFACE_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
+		echo_state "$INTERFACE_STATE" "$INTERFACE_MSG"
 
 		#private ip
-		if [[ $PRIVATE_IP_STATE = 1 ]];then
-				log "${GREEN}[+] $PRIVATE_IP_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $PRIVATE_IP_MSG = -1 ]];then
-				log "[?] $PRIVATE_IP_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $PRIVATE_IP_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
+		echo_state "$PRIVATE_IP_STATE" "$PRIVATE_IP_MSG"
 
 		#LAN
-		if [[ $LAN_STATE = 1 ]];then
-				log "${GREEN}[+] $LAN_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $LAN_STATE = -1 ]];then
-				log "[?] $LAN_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $LAN_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
+		echo_state "$LAN_STATE" "$LAN_MSG"
 
 		#DNS
-		if [[ $DNS_STATE = 1 ]];then
-				log "${GREEN}[+] $DNS_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $DNS_STATE = -1 ]];then
-				log "[?] $DNS_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $DNS_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
-
+		echo_state "$DNS_STATE" "$DNS_MSG"
 
 		#Intranet
-		if [[ $INTRANET_STATE = 1 ]];then
-				log "${GREEN}[+] $INTRANET_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $INTRANET_STATE = -1 ]];then
-				log "[?] $INTRANET_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $INTRANET_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
+		echo_state "$INTRANET_STATE" "$INTRANET_MSG"
 		
 		#Internet
-		if [[ $INTERNET_STATE = 1 ]];then
-				log "${GREEN}[+] $INTERNET_MSG${NC}" $DEFAULT_LOG_LVL
-		elif [[ $INTERNET_STATE = -1 ]];then
-				log "[?] $INTERNET_MSG" $DEFAULT_LOG_LVL
-		else
-				log "${RED}[-] $INTERNET_MSG${NC}" $DEFAULT_LOG_LVL
-		fi
+		echo_state "$INTERNET_STATE" "$INTERNET_MSG"
 		
 		log "${YELLOW}$LINE_DELIMITER${NC}" $DEFAULT_LOG_LVL
 }
@@ -476,7 +460,7 @@ function try_to_fix_interface {
 
 function handle_args {
 
-		while getopts "vdhni:x:p:W:c:" name;do
+		while getopts "vdhni:x:p:W:c:f:" name;do
 					case $name in
 					v)
 							CURRENT_LOG_LVL=$VERBOSE_LOG_LVL;;
@@ -488,15 +472,17 @@ function handle_args {
 					n)
 							TRY_TO_FIX=0;;
 					i)
-							INCLUDED_INTERFACES=$OPTARG;;
+							INCLUDED_INTERFACES="$OPTARG";;
 					x)
-							EXCLUDED_INTERFACES=$OPTARG;;
+							EXCLUDED_INTERFACES="$OPTARG";;
 					p) 		
-							PING_SWITCHES=$(echo $OPTARG | tr '=' ' ' | tr ',' ' ');;
+							PING_SWITCHES=$(echo "$OPTARG" | tr '=' ' ' | tr ',' ' ');;
 					W) 		
-							TIMEOUT=$OPTARG;;
+							TIMEOUT="$OPTARG";;
 					c) 		
-							PING_COUNT=$OPTARG;;
+							PING_COUNT="$OPTARG";;
+					f)
+							EXCLUDED_INTERFACES_FILE="$OPTARG";;
 					?)    
 							echo -e $HELP
 							exit 1;;
@@ -505,16 +491,7 @@ function handle_args {
 
 }
 
-function did_interface_improve {
-		
-		
-		#if we don't try to fix the interface the states won't change
-		if [[ $TRY_TO_FIX = 0 ]] && [[ $INTERFACE_STATE != -1 ]];then
-				echo 0
-				return
-		fi
-		
-		#if all states are good echo 0 to make the main loop to skip this interface
+function is_current_interface_ok {
 		if {
 				[[ $INTERFACE_STATE = 1 ]] && 
 				[[ $PRIVATE_IP_STATE = 1 ]] &&
@@ -523,10 +500,20 @@ function did_interface_improve {
 				[[ $INTRANET_STATE = 1 ]] &&
 				[[ $INTERNET_STATE = 1 ]]
 		};then
-				echo 0 	
+				echo 1
 		fi
 
+		echo 0
+}
 
+function did_interface_improve {
+			
+		#if we don't try to fix the interface the states won't change
+		if [[ $TRY_TO_FIX = 0 ]] && [[ $INTERFACE_STATE != -1 ]];then
+				echo 0
+				return
+		fi
+		
 
 		if [[ $INTERFACE_STATE > $LAST_INTERFACE_STATE ]] || [[ $INTERFACE_STATE = -1 ]];then
 				echo 1
@@ -649,7 +636,18 @@ function init_ping_switches {
 		fi
 
 		log "ping options: $PING_SWITCHES" $DEBUG_LOG_LVL
- }
+}
+
+function init_load_exclude_interface {
+
+		#add loaded exclude list to the EXCLUDED_INTERFACES
+		EXCLUDED_INTERFACES="$(cat $EXCLUDED_INTERFACES_FILE 2>/dev/null | tr $'\n' $INTERFACE_LIST_DELIMITER)${EXCLUDED_INTERFACES}"
+
+		log "${BLUE}loaded interface names to exclude: $EXCLUDED_INTERFACES${NC}" $DEBUG_LOG_LVL
+}
+
+#start of wifi support 
+#end of wifi support
 
 function main {
 		handle_args $@
@@ -662,7 +660,7 @@ function main {
 		if ip addr | grep tun >$REDIRECT_DEST;then
 				log "${YELLOW}please turn off your vpn${NC}" $DEFAULT_LOG_LVL
 		fi
-
+		init_load_exclude_interface
 		init_determine_target_interfaces
 		init_ping_switches
 
@@ -678,13 +676,13 @@ function main {
 				#resetting the states for the current iteration
 				set_network_states -1
 				update_last_network_states
-				while [[ $(did_interface_improve) = 1 ]];do
+				while [[ $(did_interface_improve) = 1 ]] && [[ $(is_current_interface_ok) = 0 ]];do
 						update_last_network_states
 						log "${YELLOW}[*] troubleshooting $interface${NC}" $DEFAULT_LOG_LVL
 						CURRENT_INTERFACE=$interface
 						
 						check_all_on_interface $interface
-						check_network_states
+						echo_network_states
 						
 						if [[ $TRY_TO_FIX = 1 ]];then
 								try_to_fix_interface $interface
