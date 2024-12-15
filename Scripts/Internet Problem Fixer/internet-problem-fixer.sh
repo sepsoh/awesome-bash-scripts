@@ -21,21 +21,21 @@ TRY_TO_FIX=1
 HELP="\
 Internet problem fixer\\n\
 Options:\n\
-\t-v\tverbose\n\
-\t-d\tdebug: redirects the used commands to stdout\n\
-\t-n\tno fix: don't try to fix ( eliminate the requirement for the script to be root )\n\
-\t-i INTERFACE_NAMES\tinclude interface: troubleshoot the provided interfaces only if used -x will be ignored\n\
-\t-x INTERFACE_NAMES\texclude interface: ignore the provided interfaces\n\
-\t-p PING_OPTION=VALUE,..\tpass arbitrary switches to pings used in the script, seperated by ',' and wrappen in double qoutes '\"'\n\
-\t\treserved switches: (-A, -I, -c, -W) there are other switches to set arbitrary value for -c, -W\n\
-\t-W TIMEOUT\tset value for -W switch of ping\n\
-\t-c COUNT\tset value for -c switch of ping\n\
+\t-v\t\t\t\tverbose\n\
+\t-d\t\t\t\tdebug: redirects the used commands to stdout\n\
+\t-n\t\t\t\tno fix: don't try to fix ( eliminate the requirement for the script to be root )\n\
+\t-i INTERFACE_NAMES\t\tinclude interface: troubleshoot the provided interfaces only if used -x will be ignored\n\
+\t-x INTERFACE_NAMES\t\texclude interface: ignore the provided interfaces\n\
+\t-p PING_OPTION=VALUE,..\t\tpass arbitrary switches to pings used in the script, seperated by ',' and wrappen in double qoutes '\"'\n\
+\t\t*reserved switches: (-A, -I, -c, -W) there are other switches to set arbitrary value for -c, -W\n\
+\t-W TIMEOUT\t\t\tset value for -W switch of ping\n\
+\t-c COUNT\t\t\tset value for -c switch of ping\n\
 \t-f EXCLUDED_INTERFACES_FILE\tname of the file to load from which the interface names to ignore\n
 \n\
 Usage Examples:\n\
 \t$0 -i eth0,wlan0\ttroubleshoots only eth0 and wlan0 interfaces\n\
-\t$0 -n -i eth0\tdoesn't try to fix eth0 just shows the states instead\n\
-\t$0 -x tun0,lo\tignore tun0 and lo\n\
+\t$0 -n -i eth0\t\tdoesn't try to fix eth0 just shows the states instead\n\
+\t$0 -x tun0,lo\t\tignore tun0 and lo\n\
 \t$0 -p \"-t=64,-r\"\tput -t 64 -r before other ping switches
 "
 
