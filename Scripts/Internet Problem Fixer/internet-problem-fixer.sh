@@ -636,12 +636,11 @@ function init_ping_switches {
 }
 
 function init_load_exclude_interface {
-		log "${BLUE}exclude interfaces before loading from $EXCLUDED_INTERFACES_FILE:$EXCLUDED_INTERFACES${NC}" $DEBUG_LOG_LVL
 
 		#add loaded exclude list to the EXCLUDED_INTERFACES
-		EXCLUDED_INTERFACES="$(cat $EXCLUDED_INTERFACES_FILE | tr $'\n' $INTERFACE_LIST_DELIMITER)${EXCLUDED_INTERFACES}"
+		EXCLUDED_INTERFACES="$(cat $EXCLUDED_INTERFACES_FILE 2>/dev/null | tr $'\n' $INTERFACE_LIST_DELIMITER)${EXCLUDED_INTERFACES}"
 
-		log "${BLUE}exclude interfaces after loading from $EXCLUDED_INTERFACES_FILE:$EXCLUDED_INTERFACES${NC}" $DEBUG_LOG_LVL
+		log "${BLUE}loaded interface names to exclude: $EXCLUDED_INTERFACES${NC}" $DEBUG_LOG_LVL
 }
 
 #start of wifi support 
