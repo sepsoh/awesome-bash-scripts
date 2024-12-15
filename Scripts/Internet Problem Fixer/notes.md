@@ -1,4 +1,4 @@
-# current priorities:    
+# current priorities    
 - dynamic sleep for dhclient and monitor if route table is updated    
 - VPN detection and asking the user to turn it off    
 - detect and igore VPN interfaces by default  
