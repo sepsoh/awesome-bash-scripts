@@ -13,9 +13,10 @@ The parameteres passed to package manager functions depends solely on the operat
 `_install` functions take package names to be installed, as seperate arguments.
 
 **Example**
-`_pacman_install iproute2 python3` installs python3 and iproute2 using pacman
-`_apt-get_update` updates the database of apt-get  
-
+```bash
+_pacman_install iproute2 python3 # install python3 and iproute2 using pacman
+_apt-get_update # update the database of apt-get  
+```
 
 ## \_package_manager_func_to_use()
 **Purpose**  
