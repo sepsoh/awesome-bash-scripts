@@ -29,12 +29,13 @@ You can also use each script individually.
 | [abs.internet-problem-fixer](<Scripts/Internet Problem Fixer>)      | Detect and fix common internet problems                                  |
 | [abs.internet-status.checker.sh](<Scripts/Internet Status Checker>) | Check internet connectivity status                                       |
 ### Provided Libraries :
-| Library                                  | Description                                     |
-| ---------------------------------------- | ----------------------------------------------- |
-| [abs.lib.colors](<Libraries/colors>)     | ANSI color codes to style terminal output       |
-| [abs.lib.depcheck](<Libraries/depcheck>) | Functions for verifying system dependencies     |
-| [abs.lib.logging](<Libraries/logging>)   | Simple and customizable logging system          |
-| [abs.lib.list](<Libraries/list>)         | Functions for manipulating and processing lists |
+| Library                                        | Description                                     |
+| ---------------------------------------------- | ----------------------------------------------- |
+| [abs.lib.colors](<Libraries/colors>)           | ANSI color codes to style terminal output       |
+| [abs.lib.depcheck](<Libraries/depcheck>)       | Functions for verifying system dependencies     |
+| [abs.lib.logging](<Libraries/logging>)         | Simple and customizable logging system          |
+| [abs.lib.list](<Libraries/list>)               | Functions for manipulating and processing lists |
+| [abs.lib.installpkg]((<Libraries/installpkg>)) | Cross platform installation of packages         |
 #### Importing Libraries
 
 To use a library in your script, simply source it as shown below:
@@ -49,3 +50,4 @@ If you're using ShellCheck for autocompletion/analyse your scripts, specify the 
 # shellcheck source=/usr/bin/abs.lib.somelib
 source abs.lib.somelib
 ```
+
