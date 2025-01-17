@@ -8,7 +8,7 @@ This script tries to provide cross platform installation of packages and updatin
 - pacman  
 
 ## Limitations
-This script works only if the provided packages names are available on the machine it is being executed, and it won't try to convert package names that are different in multiple linux distrobutions.
+This script works only if the provided packages names are available on the machine it is being executed, and it won't try to convert package names that are different in multiple linux distributions.
 
 ## Quick start
 
