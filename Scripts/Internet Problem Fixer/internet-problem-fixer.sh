@@ -22,7 +22,7 @@ HELP="\
 Internet problem fixer\\n\
 Options:\n\
 \t-v\t\t\t\tverbose\n\
-\t-d\t\t\t\tdebug: redirects the used commands to stdout\n\
+\t-d\t\t\t\tdebug: redirect the used commands to stdout\n\
 \t-n\t\t\t\tno fix: don't try to fix ( eliminate the requirement for the script to be root )\n\
 \t-i INTERFACE_NAMES\t\tinclude interface: troubleshoot the provided interfaces only if used -x will be ignored\n\
 \t-x INTERFACE_NAMES\t\texclude interface: ignore the provided interfaces\n\
@@ -33,10 +33,10 @@ Options:\n\
 \t-f EXCLUDED_INTERFACES_FILE\tname of the file to load from which the interface names to ignore\n
 \n\
 Usage Examples:\n\
-\t$0 -i eth0,wlan0\ttroubleshoots only eth0 and wlan0 interfaces\n\
-\t$0 -n -i eth0\t\tdoesn't try to fix eth0 just shows the states instead\n\
+\t$0 -i eth0,wlan0\ttroubleshoot only eth0 and wlan0 interfaces\n\
+\t$0 -n -i eth0\t\tshow the current states of eth0\n\
 \t$0 -x tun0,lo\t\tignore tun0 and lo\n\
-\t$0 -p \"-t=64,-r\"\tput -t 64 -r before other ping switches
+\t$0 -p \"-t=64,-r\"\tput -t 64 -r before other ping switches (like ping YOUR_SWITCHES SCRIPT_SCWITCHES DESTINATION)
 "
 
 #FILE variables, used to load information such as excluded interfaces

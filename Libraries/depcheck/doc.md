@@ -28,7 +28,9 @@ Reads dependencies from a file and checks if each dependency’s command is avai
 # dns-utils,dig  
 # git,git  
 # nodejs,node
-  
+#   |      |
+#   |      |----> command to check if this package is present
+#   |-----------> name of the package (may be used to install the package if missing)
 depcheck_cmd "deps.txt"  
 ```  
   
@@ -92,4 +94,5 @@ The extracted attribute as a string.
 name=$(_dep_attr_extract "nodejs,node" $DEP_CMD_POS)  
 echo $name  # Outputs: node  
 ```  
+
 
