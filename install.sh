@@ -34,8 +34,8 @@ abs_install(){
 		IFS=$'\n';
 		for script in $script_files; do
 			new_name="${prefix_of_package}$(basename "$script" .sh)"
-			sudo chmod +x "$script";
 			sudo cp -p "$script" "$destination_dir/$new_name";
+			chmod +x "$destination_dir/$new_name";
 			echo "installed : $new_name" 
 		done
 		IFS=$OLD_IFS
