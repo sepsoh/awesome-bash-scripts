@@ -72,19 +72,19 @@ print_menu
 while true; do
     read -rsn1 input
     case $input in
-        A) 
+        A | k)
             ((selected--))
             if [ $selected -lt 0 ]; then
                 selected=$((${#options[@]} - 1))
             fi
             ;;
-        B) 
+        B | j)
             ((selected++))
             if [ $selected -ge ${#options[@]} ]; then
                 selected=0
             fi
             ;;
-        "") 
+        "")
             if [ "${options[$selected]}" == "About" ]; then
                 show_about
                 print_menu
@@ -93,6 +93,9 @@ while true; do
                 DNS2=${dns2_list[$selected]}
                 break
             fi
+            ;;
+        q)
+            exit;
             ;;
     esac
     print_menu
