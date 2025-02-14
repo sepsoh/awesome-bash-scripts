@@ -39,17 +39,17 @@ get_current_dns_name() {
 }
 
 print_menu() {
-    clear
+    echo -n -e "\033[H\033[1J"
     current_dns_name=$(get_current_dns_name)
     echo -e "Current DNS Configuration: ${RED}$current_dns_name${NC}"
     echo -e "\nWhich DNS or option do you want to use?"
     for i in ${!options[@]}; do
         if [ $i -eq $selected ]; then
             tput setaf 4; tput bold
-            echo "-> ${options[$i]}"
+            echo -e "-> ${options[$i]}"
             tput sgr0
         else
-            echo "   ${options[$i]}"
+            echo -e "   ${options[$i]}"
         fi
     done
 }
@@ -63,10 +63,12 @@ show_about() {
     echo -e "${YELLOW}https://github.com/Mr-Meshky/dns-switcher${NC}"
     echo -e "\nPress any key to return to the menu..."
     read -n1
+    clear
 }
 
 selected=0
 
+clear
 print_menu
 
 while true; do
