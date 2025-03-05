@@ -28,7 +28,7 @@ You can also use each script individually.
 | [abs.abs-uninstall](<Scripts/ABS Uninstall>)                        | Uninstall me and delete all sctipts                                                                 |
 | [abs.internet-problem-fixer](<Scripts/Internet Problem Fixer>)      | Detect and fix common internet problems                                                             |
 | [abs.internet-status.checker.sh](<Scripts/Internet Status Checker>) | Check internet connectivity status                                                                  |
-| [abs.installpkg](<Scripts/installpkg>)                              | Cross platform installation of packages. [supported package managers](Scripts/installpkg/README.md) |
+| [abs.installpkg](<Scripts/Installpkg>)                              | Cross platform installation of packages. [supported package managers](Scripts/Installpkg/README.md#currently-supported-package-managers) |
 ### Provided Libraries :
 | Library                                      | Description                                     |
 | -------------------------------------------- | ----------------------------------------------- |
