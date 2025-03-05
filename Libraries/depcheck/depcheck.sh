@@ -1,5 +1,8 @@
+if [ -n "$DEFINE_DEPCHECK_LIB" ];then
+	return 0
+fi
 
-
+DEFINE_DEPCHECK_LIB=1
 
 # shellcheck source=/usr/bin/abs.lib.logging
 source abs.lib.logging

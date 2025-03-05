@@ -1,3 +1,9 @@
+if [ -n "$DEFINE_LIST_LIB" ];then
+	return 0
+fi
+
+DEFINE_LIST_LIB=1
+
 # scape_sed_special_chars(string_to_scape)
 # Escapes special characters in a string for safe usage in sed commands.
 # Parameters:
