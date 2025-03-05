@@ -1,3 +1,6 @@
+
+
+
 # shellcheck source=/usr/bin/abs.lib.logging
 source abs.lib.logging
 
@@ -39,7 +42,7 @@ function depcheck_cmd(){
 
 				if ! type $cmd &>/dev/null;then
 						log "$LOG_LVL_ERROR" "[$0]: missing dependancy : $(_dep_attr_extract "$line" "$DEP_NAME_POS" "$dep_attr_delim")"
-						IFS=$"$OLD_IFS"
+						IFS="$OLD_IFS"
 						return 1
 				fi
 
@@ -67,7 +70,7 @@ function depcheck_cmd_fromstr(){
 
 				if ! type $cmd &>/dev/null;then
 						log "$LOG_LVL_ERROR" "[$0]: missing dependancy : $(_dep_attr_extract "$line" "$DEP_NAME_POS" "$dep_attr_delim")"
-						IFS=$"$OLD_IFS"
+						IFS="$OLD_IFS"
 						return 1
 				fi
 
