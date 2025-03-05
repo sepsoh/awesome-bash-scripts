@@ -3,6 +3,18 @@
 # shellcheck source=/usr/bin/abs.lib.logging
 source abs.lib.logging
 
+supported_package_managers="apt apt-get dpkg pacman"
+HELP="\
+$0 packagename1 packagename2\n\
+\n\
+Cross platform package install\n\
+supported package managers: $supported_package_managers\n\
+\n\
+Usage Example:\n\
+$0 iproute2 python3\n\
+"
+
+
 _apt_install(){
 	sudo apt install $@ -y
 	return $?
@@ -73,14 +85,34 @@ _package_manager_func_to_use(){
 	elif type pacman &>/dev/null;then
 		echo _pacman
 	elif type rpm &>/dev/null;then
-		echo _rpm
+		#not yet implemented
+		echo ''
+		return 1
 	elif type dnf &>/dev/null;then
-		echo _dnf
+		#not yet implemented
+		echo ''
+		return 1
 	else
 		echo ''
 		return 1
 	fi
 	return 0
+}
+
+
+function handle_args {
+
+		while getopts "h" name;do
+					case $name in
+					h)
+							echo -e $HELP
+							exit 1;;
+					?)
+							echo -e $HELP
+							exit 1;;
+					esac
+		done
+
 }
 
 # installpkg(package_name1, package_name2, ...)
@@ -90,6 +122,8 @@ _package_manager_func_to_use(){
 # Return value:
 #   1 if _package_manager_func_to_use fails, your package manager's error code otherwise
 installpkg(){
+	handle_args "$@"
+
 	package_manager_func=$(_package_manager_func_to_use)
 
 	if [ -z "$package_manager_func" ];then
@@ -102,3 +136,5 @@ installpkg(){
 	${package_manager_func}_install $@
 	return $?
 }
+
+installpkg "$@"

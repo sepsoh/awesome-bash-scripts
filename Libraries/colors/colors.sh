@@ -1,3 +1,10 @@
+if [ -n "$DEFINE_COLORS_LIB" ];then
+	return 0
+fi
+
+DEFINE_COLORS_LIB=1
+
+
 #https://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
 
 # Reset

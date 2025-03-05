@@ -1,3 +1,11 @@
+if [ -n "$DEFINE_LOGGING_LIB" ];then
+	return 0
+fi
+
+DEFINE_LOGGING_LIB=1
+
+
+
 # shellcheck source=/usr/bin/abs.lib.colors
 source abs.lib.colors
 DATE_FMT="%Y-%m-%d %H:%M:%S"
