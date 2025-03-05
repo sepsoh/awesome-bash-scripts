@@ -3,6 +3,7 @@
 # shellcheck source=/usr/bin/abs.lib.logging
 source abs.lib.logging
 
+
 _apt_install(){
 	sudo apt install $@ -y
 	return $?
@@ -73,9 +74,13 @@ _package_manager_func_to_use(){
 	elif type pacman &>/dev/null;then
 		echo _pacman
 	elif type rpm &>/dev/null;then
-		echo _rpm
+		#not yet implemented
+		echo ''
+		return 1
 	elif type dnf &>/dev/null;then
-		echo _dnf
+		#not yet implemented
+		echo ''
+		return 1
 	else
 		echo ''
 		return 1
