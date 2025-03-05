@@ -102,3 +102,5 @@ installpkg(){
 	${package_manager_func}_install $@
 	return $?
 }
+
+installpkg "$@"
