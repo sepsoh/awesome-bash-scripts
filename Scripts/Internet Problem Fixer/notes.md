@@ -1,4 +1,6 @@
 # current priorities    
+- check if both wpa_supplicant and iwd is running, then remove one of them
+- check if a wireless support daemon is running, if not, try to start or install
 - dynamic sleep for dhclient and monitor if route table is updated    
 - VPN detection and asking the user to turn it off    
 - detect and igore VPN interfaces by default  
