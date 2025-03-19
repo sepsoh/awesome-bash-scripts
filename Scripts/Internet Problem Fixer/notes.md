@@ -1,4 +1,5 @@
 # current priorities    
+- fix wifi device being unavailable for network manager (iwd being manaually started by the user)
 - check if both wpa_supplicant and iwd is running, then remove one of them
 - check if a wireless support daemon is running, if not, try to start or install
 - dynamic sleep for dhclient and monitor if route table is updated    
