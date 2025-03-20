@@ -443,6 +443,9 @@ function set_reliable_dns {
 }
 
 function try_to_fix_interface {
+		#TODO: if interface is wifi, try to connect nearest accesspoint and check if 
+		#can connect to internet, if not repeat for the next nearest accesspoint 
+
 		interface_name="$1"
 		if [[ $INTERFACE_STATE = 0 ]];then
 				log "${BLUE}[*] restarting interface $interface_name${NC}" $VERBOSE_LOG_LVL
