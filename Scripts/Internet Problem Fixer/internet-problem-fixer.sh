@@ -442,11 +442,9 @@ function set_reliable_dns {
 		sudo sh -c "echo nameserver $RELIABLE_DNS_SERVER2 > /etc/resolv.conf"
 }
 
-function try_to_fix_interface {
-		#TODO: if interface is wifi, try to connect nearest accesspoint and check if 
-		#can connect to internet, if not repeat for the next nearest accesspoint 
-
+function try_to_fix_interface_wired {
 		interface_name="$1"
+
 		if [[ $INTERFACE_STATE = 0 ]];then
 				log "${BLUE}[*] restarting interface $interface_name${NC}" $VERBOSE_LOG_LVL
 				restart_interface $interface_name
@@ -454,11 +452,6 @@ function try_to_fix_interface {
 		if [[ $PRIVATE_IP_STATE = 0 ]];then
 				dhcp_renew $interface_name
 		fi
-		if [[ $DNS_STATE = 0 ]];then
-				set_reliable_dns
-		fi
-
-
 }
 
 function handle_args {
@@ -650,7 +643,133 @@ function init_load_exclude_interface {
 }
 
 #start of wifi support 
+
+WIFI_DEV_PROPERTY_DELIM=","
+WIFI_DEVS_DELIM=$'\n'
+#NetworkManager device path,interface name
+WIFI_DEVS=""
+
+
+ACCESSPOINT_PROPERTY_DELIM=","
+ACCESSPOINTS_DELIM=$'\n'
+#NetworkManager device path,SSID,wpaflags
+ACCESSPOINTS=""
+
+function init_wifi_devs {
+	WIFI_DEVS="$(abs.bin.GetAllWifiDevices --detailed)"
+	log "${BLUE}[*] found wifi devices:" $VERBOSE_LOG_LVL
+	log "${BLUE}[*] $WIFI_DEVS" $VERBOSE_LOG_LVL
+}
+
+function init_accesspoints {
+	log "${BLUE}[*] scanning for accesspoints" $CURRENT_LOG_LVL
+	ACCESSPOINTS="$(abs.bin.NetworkManager-GetAllAccessPoints --detailed)"
+	log "${BLUE}[*] found accesspoints:" $VERBOSE_LOG_LVL
+	log "${BLUE}[*] $ACCESSPOINTS:" $VERBOSE_LOG_LVL
+}
+
+function get_wifi_dev_interface_name {
+	wifi_dev="$1"
+	echo "$wifi_dev" | cut -f 2 -d "$WIFI_DEV_PROPERTY_DELIM"
+}
+
+function get_wifi_dev_path {
+	wifi_dev="$1"
+	echo "$wifi_dev" | cut -f 1 -d "$WIFI_DEV_PROPERTY_DELIM"
+}
+
+#nothing will be echoed if no device matches, it's responsibility of the caller to make sure the interface is wifi
+function get_wifi_dev_from_interface_name {
+	interface_name="$1"
+
+	OLD_IFS="$IFS"
+	IFS="$WIFI_DEVS_DELIM"
+	for device in $WIFI_DEVS; do
+		if [ "$interface_name" = "$(get_wifi_dev_interface_name "$device")" ];then
+			echo "$device"
+			break
+		fi
+	done
+	IFS="$OLD_IFS"
+}
+
+function is_wifi {
+	interface_name="$1"
+
+	errcode=1
+
+	OLD_IFS="$IFS"
+	IFS="$WIFI_DEVS_DELIM"
+	for wifi_dev in $WIFI_DEVS;do
+		if [ "$(get_wifi_dev_interface_name "$wifi_dev")" = "$interface_name" ];then
+			errcode=0
+		fi
+	done
+	IFS="$OLD_IFS"
+
+	return $errcode 
+}
+
+function get_accesspoint_path {
+	accesspoint="$1"
+	echo "$accesspoint" | cut -f 1 -d "$ACCESSPOINT_PROPERTY_DELIM"
+}
+
+
+function get_accesspoint_ssid {
+	accesspoint="$1"
+	echo "$accesspoint" | cut -f 2 -d "$ACCESSPOINT_PROPERTY_DELIM"
+}
+
+
+function try_to_fix_interface_wireless {
+	interface_name="$1"
+	
+	errcode=1
+
+	OLD_IFS="$IFS"
+	IFS="$ACCESSPOINTS_DELIM"
+	#try to connect to each accesspoint, if internet was availbale stop
+	for accesspoint in $ACCESSPOINTS;do
+		device="$(get_wifi_dev_from_interface_name "$interface_name")"
+		abs.bin.TryToConnectToAccessPoint \
+			--accesspoint_path $(get_accesspoint_path "$accesspoint")\
+			--device_path $(get_wifi_dev_path "$device")
+		err=$?
+		if [[ $err -ne 0 ]];then
+			return
+		fi
+		log "${BLUE}[*] connected to wireless network $(get_accesspoint_ssid $accesspoint)" $CURRENT_LOG_LVL
+		if ! check_lan_connectivity "$interface_name" ;then
+			dhcp_renew "$interface_name"
+		fi
+		if check_internet_connectivity "$interface_name" ;then
+			errcode=0
+			break
+		fi
+	done
+	IFS="$OLD_IFS"
+
+	return $errcode
+}
 #end of wifi support
+
+
+function try_to_fix_interface {
+	interface_name="$1"
+
+	if is_wifi "$interface_name";then
+		try_to_fix_interface_wireless "$interface_name"
+		return $?
+	else
+		try_to_fix_interface_wired "$interface_name"
+	fi
+
+	#this applies to both wireless and wired interfaces
+	if [[ $DNS_STATE = 0 ]];then
+			set_reliable_dns
+	fi
+}
 
 function main {
 		handle_args $@
@@ -666,6 +785,8 @@ function main {
 		init_load_exclude_interface
 		init_determine_target_interfaces
 		init_ping_switches
+		init_wifi_devs
+		init_accesspoints
 
 		log "${YELLOW}[*] interfaces to troubleshoot: $TARGET_INTERFACES${NC}" $VERBOSE_LOG_LVL
 		if [[ $CURRENT_LOG_LVL -ge $DEBUG_LOG_LVL ]];then
@@ -687,7 +808,7 @@ function main {
 						check_all_on_interface $interface
 						echo_network_states
 						
-						if [[ $TRY_TO_FIX = 1 ]];then
+						if [[ $TRY_TO_FIX = 1 ]] && [[ $INTERNET_STATE -ne 1 ]];then
 								try_to_fix_interface $interface
 						fi
 
