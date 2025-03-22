@@ -57,7 +57,7 @@ func get_all_wifi_devs() (result []gonetworkmanager.DeviceWireless , err error) 
 
 
 //path,ssid,is_password_protected
-func ouput_accesspoint_based_on_args(access_point gonetworkmanager.AccessPoint) error{
+func output_accesspoint_based_on_args(access_point gonetworkmanager.AccessPoint) error{
 	var print_string string = string(access_point.GetPath())
 	if args.Detailed {
 		ssid, err := access_point.GetPropertySSID()
@@ -108,7 +108,7 @@ func main() {
 	if_err_log_and_die(err)
 
 	for _,access_point := range access_points {
-		ouput_accesspoint_based_on_args(access_point)
+		output_accesspoint_based_on_args(access_point)
 	}
 
 	os.Exit(0)
