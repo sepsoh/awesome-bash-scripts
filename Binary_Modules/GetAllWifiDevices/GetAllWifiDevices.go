@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-
 	"github.com/Wifx/gonetworkmanager/v3"
 )
 
@@ -27,8 +26,6 @@ func main (){
 
 		if device_type == gonetworkmanager.NmDeviceTypeWifi{
 			fmt.Println(devices[i].GetPath())
-		}
-		
+		}	
 	}
-
 }
