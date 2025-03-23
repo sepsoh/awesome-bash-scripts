@@ -745,7 +745,7 @@ function try_to_fix_interface_wireless {
 		fi
 		if check_internet_connectivity "$interface_name" ;then
 			errcode=0
-			break
+			continue
 		fi
 	done
 	IFS="$OLD_IFS"
