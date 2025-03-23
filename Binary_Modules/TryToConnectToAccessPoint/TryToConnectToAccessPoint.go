@@ -25,7 +25,7 @@ const (
 
 func if_err_log_and_die(err error){
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
