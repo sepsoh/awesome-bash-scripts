@@ -8,11 +8,13 @@ DESTINATION_DIR="/usr/bin"
 #list of tuples of (source_directory,prefix)
 INSTALL_SOURCES_DELIM=","
 
-#source_dir, prefix of installed file name, type of file (none for elf files)
+#each install source is in this format
+#source_dir,prefix of installed file name,type of file (none for elf files),is optional to install
+#if the 'is optional to install' is not zero length it should be interpreted as true, and it should be populated with 'Optional' keyword for better readability
 INSTALL_SOURCES="\
-Scripts${INSTALL_SOURCES_DELIM}${INSTALL_SOURCES_DELIM}.sh
-Libraries${INSTALL_SOURCES_DELIM}lib${INSTALL_SOURCES_DELIM}.sh
-Binary_Modules/bin/${INSTALL_SOURCES_DELIM}bin${INSTALL_SOURCES_DELIM}
+Scripts${INSTALL_SOURCES_DELIM}${INSTALL_SOURCES_DELIM}.sh${INSTALL_SOURCES_DELIM}
+Libraries${INSTALL_SOURCES_DELIM}lib${INSTALL_SOURCES_DELIM}.sh${INSTALL_SOURCES_DELIM}
+Binary_Modules/bin/${INSTALL_SOURCES_DELIM}bin${INSTALL_SOURCES_DELIM}${INSTALL_SOURCES_DELIM}Optional
 "
 
 #maybe this should be a library too!
@@ -52,6 +54,17 @@ for src in $INSTALL_SOURCES;do
 		dir=$(echo $src | cut -d $INSTALL_SOURCES_DELIM -f 1)
 		prefix=$(echo $src | cut -d $INSTALL_SOURCES_DELIM -f 2)
 		file_type=$(echo $src | cut -d $INSTALL_SOURCES_DELIM -f 3)
+		is_optional=$(echo $src | cut -d $INSTALL_SOURCES_DELIM -f 4)
+		confirm='y'
+		if [ -n "$is_optional" ];then
+			read -p "$dir is optional to install, install it? [Y/n]" -r confirm
+		fi
+
+		if [ "$confirm" = "n" ] || [ "$confirm" = "N" ];then
+			echo "will not install $dir"
+			continue
+		fi
+
 		echo installing $dir with prefix $prefix in $DESTINATION_DIR
 		abs_install "$dir" "$DESTINATION_DIR" "$prefix" "$file_type"
 done
