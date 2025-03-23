@@ -31,13 +31,15 @@ func if_err_log_and_die(err error){
 }
 
 func is_activeconnection_present(connection gonetworkmanager.ActiveConnection) (bool){
-	_, err := connection.GetPropertyID()
+	conn, err := connection.GetPropertyConnection()
 
 	if err != nil {
 		return false
-	} else {
-		return true
 	}
+	if conn == nil {
+		return false
+	}
+	return true
 }
 
 func get_all_wifi_devs(nm gonetworkmanager.NetworkManager) (result []gonetworkmanager.DeviceWireless , err error) {
@@ -146,6 +148,7 @@ func main (){
 	if connection_success == false {
 		//TODO delete the setting generated in NetworkManager
 		//_ , err:= number_generated_for_connection_by_nm(conn)
+		exit_code = 1
 		if_err_log_and_die(err)
 	}
 
