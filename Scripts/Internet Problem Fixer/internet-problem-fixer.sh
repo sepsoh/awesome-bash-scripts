@@ -737,7 +737,7 @@ function try_to_fix_interface_wireless {
 			--device_path $(get_wifi_dev_path "$device")
 		err=$?
 		if [[ $err -ne 0 ]];then
-			return
+			continue
 		fi
 		log "${BLUE}[*] connected to wireless network $(get_accesspoint_ssid $accesspoint)" $CURRENT_LOG_LVL
 		if ! check_lan_connectivity "$interface_name" ;then
@@ -745,7 +745,7 @@ function try_to_fix_interface_wireless {
 		fi
 		if check_internet_connectivity "$interface_name" ;then
 			errcode=0
-			continue
+			break
 		fi
 	done
 	IFS="$OLD_IFS"
