@@ -1,7 +1,18 @@
 #!/bin/bash
 
+# shellcheck source=/usr/bin/abs.lib.depcheck
+source abs.lib.depcheck
 #used to push and pop IFS
 OLD_IFS=$IFS
+
+
+ESSENTIAL_DEPENDANCIES_CMD="\
+inetutils-ping,ping
+iproute2,ip
+dnsutils,nslookup
+isc-dhcp-client,dhclient\
+"
+
 
 #terminal colors
 RED='\033[0;31m'
@@ -94,13 +105,15 @@ RELIABLE_DNS_SERVER2="8.8.4.4"
 #used to seperate the output of some function from another
 LINE_DELIMITER="--------------------------"
 
-#log levels
+#_log levels
 #10-40 and 60-90 are reserved for the future use
 DEFAULT_LOG_LVL=0
 VERBOSE_LOG_LVL=50
 DEBUG_LOG_LVL=100
 
-CURRENT_LOG_LVL=$DEFAULT_LOG_LVL
+
+#renamed to __CURRENT_LOG_LVL to resolve conflict with abs.bin.logging
+_CURRENT_LOG_LVL=$DEFAULT_LOG_LVL
 
 #COMMANDNAME_SWITCHES are used along each COMMANDNAME, this is portability (to test if different switches work on current machine)
 #init_COMMANDNAME_switches will be called at the start of the script and fill COMMANDNAME_SWITCHES
@@ -113,16 +126,17 @@ ASSUMED_RELIABLE_IP="127.0.0.1"
 #WARNING! ASSUMED_RELIABLE_IP must be reachable via ASSUMED_AVAILABLE_INTERFACE_NAME
 ASSUMED_AVAILABLE_INTERFACE_NAME="lo"
 
-function log {
+#renamed to _log to resolve conflict with abs.bin.logging
+function _log {
  	string="$1"
-	log_level="$2"
+	_log_level="$2"
 	
 	
 	#should be dynamic based on the switches
 	#like a user sometimes wants to send all of errors over a socket(s) and have the states shown in a terminal
 	dest=1
 
-	if [[ $CURRENT_LOG_LVL -ge $log_level ]];then
+	if [[ $_CURRENT_LOG_LVL -ge $_log_level ]];then
 			echo -e $string>&$dest
 	fi
 }
@@ -158,8 +172,8 @@ function check_internet_connectivity {
 				ping_dest="${INTERNET_IPV4S[@]}"
 		fi
 
-		log "${BLUE}[*] checking internet connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
-		log "ping destintaion:$ping_dest" $DEBUG_LOG_LVL
+		_log "${BLUE}[*] checking internet connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
+		_log "ping destintaion:$ping_dest" $DEBUG_LOG_LVL
 
 		OLD_IFS=$IFS
 		IFS=" "
@@ -176,7 +190,7 @@ function check_internet_connectivity {
 		IFS=$OLD_IFS
 		
 
-		log "${RED}[-] $interface_name can't reach the internet${NC}" $VERBOSE_LOG_LVL
+		_log "${RED}[-] $interface_name can't reach the internet${NC}" $VERBOSE_LOG_LVL
 
 		INTERNET_STATE=0
 		return 1
@@ -190,8 +204,8 @@ function check_intranet_connectivity {
 				ping_dest="${INTRANET_IPV4S[@]}"
 		fi
 
-		log "${BLUE}[*] checking intranet connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
-		log "ping dest:$ping_dest" $DEBUG_LOG_LVL
+		_log "${BLUE}[*] checking intranet connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
+		_log "ping dest:$ping_dest" $DEBUG_LOG_LVL
 
 		OLD_IFS=$IFS
 		IFS=" "
@@ -206,7 +220,7 @@ function check_intranet_connectivity {
 		done
 		IFS=$OLD_IFS
 		
-		log "${RED}[-] $interface_name can't reach the intranet${NC}" $VERBOSE_LOG_LVL
+		_log "${RED}[-] $interface_name can't reach the intranet${NC}" $VERBOSE_LOG_LVL
 		INTRANET_STATE=0
 		INTERNET_STATE=0
 		return 1
@@ -216,8 +230,8 @@ function check_lan_connectivity {
 		interface_name="$1"
 		default_gws=$(get_default_gws_of_interface $interface_name)
 
-		log "${BLUE}[*] checking LAN connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
-		log "gateways of $interface_name: $default_gws" $DEBUG_LOG_LVL
+		_log "${BLUE}[*] checking LAN connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
+		_log "gateways of $interface_name: $default_gws" $DEBUG_LOG_LVL
 
 		
 		OLD_IFS=$IFS
@@ -237,7 +251,7 @@ function check_lan_connectivity {
 		INTRANET_STATE=0
 		INTERNET_STATE=0
 		
-		log "${RED}[-] $interface_name can't reach it't LAN${NC}" $VERBOSE_LOG_LVL
+		_log "${RED}[-] $interface_name can't reach it't LAN${NC}" $VERBOSE_LOG_LVL
 		return 1
 }
 function check_dns {
@@ -246,7 +260,7 @@ function check_dns {
 		#is not used currently
 		interface_name="$1"
 
-		log "${BLUE}[*] checking DNS${NC}" $VERBOSE_LOG_LVL
+		_log "${BLUE}[*] checking DNS${NC}" $VERBOSE_LOG_LVL
 
 		OLD_IFS=$IFS
 		IFS=$","
@@ -264,7 +278,7 @@ function check_dns {
 		done		
 		IFS=$OLD_IFS
 
-		log "${RED}[-] DNS doesn't work${NC}" $VERBOSE_LOG_LVL
+		_log "${RED}[-] DNS doesn't work${NC}" $VERBOSE_LOG_LVL
 		DNS_STATE=0
 		return 1
 }
@@ -273,8 +287,8 @@ function check_interface_self_connectivity {
 		interface_name="$1"
 		interface_ips=$(get_interface_ipv4s $interface_name)
 		
-		log "${BLUE}[*] checking interface self connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
-		log "interface ips of $interface_name: $interface_ips" $DEBUG_LOG_LVL
+		_log "${BLUE}[*] checking interface self connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
+		_log "interface ips of $interface_name: $interface_ips" $DEBUG_LOG_LVL
 
 		OLD_IFS=$IFS
 		IFS=$' '
@@ -282,7 +296,7 @@ function check_interface_self_connectivity {
 				ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $ip >&$REDIRECT_DEST
 				errno=$?
 				if [[ $errno != 0 ]];then
-						log "${RED}[-] $ip is not  reachable via $interface_name${NC}" $VERBOSE_LOG_LVL
+						_log "${RED}[-] $ip is not  reachable via $interface_name${NC}" $VERBOSE_LOG_LVL
 						#if interface can't ping itself it cant reach anything
 						set_network_states 0
 						return 1
@@ -300,11 +314,11 @@ function echo_state {
 
 		#interface
 		if [[ $state = 1 ]];then
-				log "${GREEN}[+] $msg${NC}" $DEFAULT_LOG_LVL
+				_log "${GREEN}[+] $msg${NC}" $DEFAULT_LOG_LVL
 		elif [[ $state = -1 ]];then
-				log "[?] $msg" $DEFAULT_LOG_LVL
+				_log "[?] $msg" $DEFAULT_LOG_LVL
 		else
-				log "${RED}[-] $msg${NC}" $DEFAULT_LOG_LVL
+				_log "${RED}[-] $msg${NC}" $DEFAULT_LOG_LVL
 		fi
 
 
@@ -318,8 +332,8 @@ function echo_network_states {
 		INTRANET_MSG="Intranet reachability"
 		INTERNET_MSG="Internet reachability"
 
-		log "${YELLOW}$LINE_DELIMITER${NC}" $DEFAULT_LOG_LVL
-		log "current network stats of $CURRENT_INTERFACE:" $DEFAULT_LOG_LVL
+		_log "${YELLOW}$LINE_DELIMITER${NC}" $DEFAULT_LOG_LVL
+		_log "current network stats of $CURRENT_INTERFACE:" $DEFAULT_LOG_LVL
 
 		#interface
 		echo_state "$INTERFACE_STATE" "$INTERFACE_MSG"
@@ -339,7 +353,7 @@ function echo_network_states {
 		#Internet
 		echo_state "$INTERNET_STATE" "$INTERNET_MSG"
 		
-		log "${YELLOW}$LINE_DELIMITER${NC}" $DEFAULT_LOG_LVL
+		_log "${YELLOW}$LINE_DELIMITER${NC}" $DEFAULT_LOG_LVL
 }
 
 function set_network_states {
@@ -389,18 +403,18 @@ function restart_interface {
 
 		
 		interface_name="$1"
-		log "${BLUE}[*] restarting interface $interface_name" $VERBOSE_LOG_LVL
+		_log "${BLUE}[*] restarting interface $interface_name" $VERBOSE_LOG_LVL
 		sudo ip link set $interface_name "down"
 		errno=$?
 		if [[ $errno != 0 ]];then
-				log "${RED}failed to shutdown $interface_name${NC}" $VERBOSE_LOG_LVL
+				_log "${RED}failed to shutdown $interface_name${NC}" $VERBOSE_LOG_LVL
 				return 1
 		fi		
 
 		sudo ip link set $interface_name up
 		errno=$?
 		if [[ $errno != 0 ]];then
-				log "${RED} failed to bring up $interface_name${NC}" $VERBOSE_LOG_LVL
+				_log "${RED} failed to bring up $interface_name${NC}" $VERBOSE_LOG_LVL
 				return 1
 		fi
 	
@@ -410,18 +424,18 @@ function restart_interface {
 function dhcp_renew {
 		
 		interface_name="$1"
-		log "${BLUE}[*] renewing ip of $interface_name${NC}" $VERBOSE_LOG_LVL
+		_log "${BLUE}[*] renewing ip of $interface_name${NC}" $VERBOSE_LOG_LVL
 		sudo dhclient -r $interface_name>&$REDIRECT_DEST
 		errno=$?
 		if [[ $errno != 0 ]];then
-				log "${RED}[-] failed to release ip of $interface_name${NC}" $VERBOSE_LOG_LVL
+				_log "${RED}[-] failed to release ip of $interface_name${NC}" $VERBOSE_LOG_LVL
 				return 1
 		fi		
 
 		sudo dhclient -nw $interface_name>&$REDIRECT_DEST
 		errno=$?
 		if [[ $errno != 0 ]];then
-				log "${RED}[-] failed to renew ip of $interface_name${NC}" $VERBOSE_LOG_LVL
+				_log "${RED}[-] failed to renew ip of $interface_name${NC}" $VERBOSE_LOG_LVL
 				return 1
 		fi
 
@@ -436,7 +450,7 @@ function restart_and_renew_interface {
 }
 
 function set_reliable_dns {
-		log "${BLUE}[*] setting reliable dns${NC}" $VERBOSE_LOG_LVL
+		_log "${BLUE}[*] setting reliable dns${NC}" $VERBOSE_LOG_LVL
 
 		sudo sh -c "echo nameserver $RELIABLE_DNS_SERVER1 > /etc/resolv.conf"
 		sudo sh -c "echo nameserver $RELIABLE_DNS_SERVER2 > /etc/resolv.conf"
@@ -446,7 +460,7 @@ function try_to_fix_interface_wired {
 		interface_name="$1"
 
 		if [[ $INTERFACE_STATE = 0 ]];then
-				log "${BLUE}[*] restarting interface $interface_name${NC}" $VERBOSE_LOG_LVL
+				_log "${BLUE}[*] restarting interface $interface_name${NC}" $VERBOSE_LOG_LVL
 				restart_interface $interface_name
 		fi
 		if [[ $PRIVATE_IP_STATE = 0 ]];then
@@ -459,9 +473,9 @@ function handle_args {
 		while getopts "vdhni:x:p:W:c:f:" name;do
 					case $name in
 					v)
-							CURRENT_LOG_LVL=$VERBOSE_LOG_LVL;;
+							_CURRENT_LOG_LVL=$VERBOSE_LOG_LVL;;
 					d)
-							CURRENT_LOG_LVL=$DEBUG_LOG_LVL;;
+							_CURRENT_LOG_LVL=$DEBUG_LOG_LVL;;
 					h)
 							echo -e $HELP
 							exit 1;;
@@ -583,7 +597,7 @@ function init_determine_target_interfaces {
 
 		if ! [ -z $INCLUDED_INTERFACES ];then
 				TARGET_INTERFACES="$INCLUDED_INTERFACES"
-				log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
+				_log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
 				return
 		fi
 
@@ -594,10 +608,10 @@ function init_determine_target_interfaces {
 		if [ -z "$TARGET_INTERFACES" ];then
 				if [[ $TRY_TO_FIX = 1 ]];then
 						#might want to add default gateway based on icmp scan?
-						log "${RED}[-] no interfaces to get to internet refreshing all interfaces${NC}" $DEFAULT_LOG_LVL
+						_log "${RED}[-] no interfaces to get to internet refreshing all interfaces${NC}" $DEFAULT_LOG_LVL
 						TARGET_INTERFACES="$(get_all_interfaces)"
 						TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
-						log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
+						_log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
 
 						OLD_IFS=$IFS
 						IFS=$INTERFACE_LIST_DELIMITER
@@ -610,7 +624,7 @@ function init_determine_target_interfaces {
 						TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
 				fi
 				if [ -z "$TARGET_INTERFACES" ];then
-						log "${RED}[-] no interfaces to get to internet exiting${NC}" $DEFAULT_LOG_LVL
+						_log "${RED}[-] no interfaces to get to internet exiting${NC}" $DEFAULT_LOG_LVL
 						exit 1
 				fi
 				TARGET_INTERFACES=$(get_interfaces_with_default_gw)
@@ -619,7 +633,7 @@ function init_determine_target_interfaces {
 		fi
 
 
-		log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
+		_log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
 
 }
 
@@ -628,10 +642,10 @@ function init_ping_switches {
 		if ping -c 1 -A $ASSUMED_RELIABLE_IP >&$REDIRECT_DEST;then
 				PING_SWITCHES=$PING_SWITCHES" -A "
 		else
-				log "${BLUE} -A is not available for ping, the script will slow down drastically${NC}" $VERBOSE_LOG_LVL
+				_log "${BLUE} -A is not available for ping, the script will slow down drastically${NC}" $VERBOSE_LOG_LVL
 		fi
 
-		log "ping options: $PING_SWITCHES" $DEBUG_LOG_LVL
+		_log "ping options: $PING_SWITCHES" $DEBUG_LOG_LVL
 }
 
 function init_load_exclude_interface {
@@ -639,7 +653,7 @@ function init_load_exclude_interface {
 		#add loaded exclude list to the EXCLUDED_INTERFACES
 		EXCLUDED_INTERFACES="$(cat $EXCLUDED_INTERFACES_FILE 2>/dev/null | tr $'\n' $INTERFACE_LIST_DELIMITER)${EXCLUDED_INTERFACES}"
 
-		log "${BLUE}loaded interface names to exclude: $EXCLUDED_INTERFACES${NC}" $DEBUG_LOG_LVL
+		_log "${BLUE}loaded interface names to exclude: $EXCLUDED_INTERFACES${NC}" $DEBUG_LOG_LVL
 }
 
 #start of wifi support 
@@ -657,15 +671,15 @@ ACCESSPOINTS=""
 
 function init_wifi_devs {
 	WIFI_DEVS="$(abs.bin.GetAllWifiDevices --detailed 2>/dev/null)"
-	log "${BLUE}[*] found wifi devices:" $VERBOSE_LOG_LVL
-	log "${BLUE}[*] $WIFI_DEVS" $VERBOSE_LOG_LVL
+	_log "${BLUE}[*] found wifi devices:" $VERBOSE_LOG_LVL
+	_log "${BLUE}[*] $WIFI_DEVS" $VERBOSE_LOG_LVL
 }
 
 function init_accesspoints {
-	log "${BLUE}[*] scanning for accesspoints" $CURRENT_LOG_LVL
+	_log "${BLUE}[*] scanning for accesspoints" $_CURRENT_LOG_LVL
 	ACCESSPOINTS="$(abs.bin.NetworkManager-GetAllAccessPoints --detailed 2>/dev/null)"
-	log "${BLUE}[*] found accesspoints:" $VERBOSE_LOG_LVL
-	log "${BLUE}[*] $ACCESSPOINTS:" $VERBOSE_LOG_LVL
+	_log "${BLUE}[*] found accesspoints:" $VERBOSE_LOG_LVL
+	_log "${BLUE}[*] $ACCESSPOINTS:" $VERBOSE_LOG_LVL
 
 	found_ap_ssids=""
 
@@ -674,7 +688,7 @@ function init_accesspoints {
 	for accesspoint in $ACCESSPOINTS;do
 		found_ap_ssids="${found_ap_ssids} $(get_accesspoint_ssid "$accesspoint")"
 	done
-	log "${BLUE}[*] found wifi accesspoints: $found_ap_ssids" $CURRENT_LOG_LVL
+	_log "${BLUE}[*] found wifi accesspoints: $found_ap_ssids" $_CURRENT_LOG_LVL
 }
 
 function get_wifi_dev_interface_name {
@@ -749,7 +763,7 @@ function try_to_fix_interface_wireless {
 		if [[ $errno -ne 0 ]];then
 			continue
 		fi
-		log "${BLUE}[*] connected to wireless network $(get_accesspoint_ssid $accesspoint)" $CURRENT_LOG_LVL
+		_log "${BLUE}[*] connected to wireless network $(get_accesspoint_ssid $accesspoint)" $_CURRENT_LOG_LVL
 		if ! check_lan_connectivity "$interface_name" ;then
 			dhcp_renew "$interface_name"
 		fi
@@ -785,6 +799,11 @@ function try_to_fix_interface {
 }
 
 function main {
+
+		if ! depcheck_cmd_fromstr "$ESSENTIAL_DEPENDANCIES_CMD"; then
+			exit 1
+		fi
+		
 		handle_args $@
 
 		
@@ -793,7 +812,7 @@ function main {
 		fi
 
 		if ip addr | grep tun >$REDIRECT_DEST;then
-				log "${YELLOW}please turn off your vpn${NC}" $DEFAULT_LOG_LVL
+				_log "${YELLOW}please turn off your vpn${NC}" $DEFAULT_LOG_LVL
 		fi
 		init_load_exclude_interface
 		init_determine_target_interfaces
@@ -801,8 +820,8 @@ function main {
 		init_wifi_devs
 		init_accesspoints
 
-		log "${YELLOW}[*] interfaces to troubleshoot: $TARGET_INTERFACES${NC}" $VERBOSE_LOG_LVL
-		if [[ $CURRENT_LOG_LVL -ge $DEBUG_LOG_LVL ]];then
+		_log "${YELLOW}[*] interfaces to troubleshoot: $TARGET_INTERFACES${NC}" $VERBOSE_LOG_LVL
+		if [[ $_CURRENT_LOG_LVL -ge $DEBUG_LOG_LVL ]];then
 				REDIRECT_DEST="1"
 		fi
 	
@@ -815,7 +834,7 @@ function main {
 				update_last_network_states
 				while [[ $(did_interface_improve) = 1 ]] && [[ $(is_current_interface_ok) = 0 ]];do
 						update_last_network_states
-						log "${YELLOW}[*] troubleshooting $interface${NC}" $DEFAULT_LOG_LVL
+						_log "${YELLOW}[*] troubleshooting $interface${NC}" $DEFAULT_LOG_LVL
 						CURRENT_INTERFACE=$interface
 						
 						check_all_on_interface $interface
