@@ -696,18 +696,18 @@ function get_wifi_dev_from_interface_name {
 function is_wifi {
 	interface_name="$1"
 
-	errcode=1
+	errno=1
 
 	OLD_IFS="$IFS"
 	IFS="$WIFI_DEVS_DELIM"
 	for wifi_dev in $WIFI_DEVS;do
 		if [ "$(get_wifi_dev_interface_name "$wifi_dev")" = "$interface_name" ];then
-			errcode=0
+			errno=0
 		fi
 	done
 	IFS="$OLD_IFS"
 
-	return $errcode 
+	return $errno 
 }
 
 function get_accesspoint_path {
@@ -725,7 +725,7 @@ function get_accesspoint_ssid {
 function try_to_fix_interface_wireless {
 	interface_name="$1"
 	
-	errcode=1
+	errno=1
 
 	OLD_IFS="$IFS"
 	IFS="$ACCESSPOINTS_DELIM"
@@ -736,8 +736,8 @@ function try_to_fix_interface_wireless {
 			--accesspoint_path $(get_accesspoint_path "$accesspoint" 2>/dev/null)\
 			--device_path $(get_wifi_dev_path "$device" 2>/dev/null)\
 			2>/dev/null
-		err=$?
-		if [[ $err -ne 0 ]];then
+		errno=$?
+		if [[ $errno -ne 0 ]];then
 			continue
 		fi
 		log "${BLUE}[*] connected to wireless network $(get_accesspoint_ssid $accesspoint)" $CURRENT_LOG_LVL
@@ -745,13 +745,13 @@ function try_to_fix_interface_wireless {
 			dhcp_renew "$interface_name"
 		fi
 		if check_internet_connectivity "$interface_name" ;then
-			errcode=0
+			errno=0
 			break
 		fi
 	done
 	IFS="$OLD_IFS"
 
-	return $errcode
+	return $errno
 }
 #end of wifi support
 
