@@ -39,17 +39,21 @@ function depcheck_cmd(){
 				return 1
 		fi
 
+		OLD_PATH="$PATH"
+		#this is done because in some linux distributions /sbin and /usr/sbin are not in PATH, like debian
+		PATH=$PATH:/sbin:/usr/sbin
 		while read -r line;do
 				cmd="$(_dep_attr_extract "$line" "$DEP_CMD_POS" "$dep_attr_delim")"
 				log $LOG_LVL_DEBUG "[$0]: checking cmd $cmd"
 
-				if ! type $cmd &>/dev/null;then
+				if ! type "$cmd" &>/dev/null;then
 						log "$LOG_LVL_ERROR" "[$0]: missing dependancy : $(_dep_attr_extract "$line" "$DEP_NAME_POS" "$dep_attr_delim")"
 						IFS="$OLD_IFS"
 						return 1
 				fi
 
 		done <<<"$deps"
+		PATH="$OLD_PATH"
 
 		return 0
 }
@@ -67,17 +71,21 @@ function depcheck_cmd_fromstr(){
 		deps="$1"
 		dep_attr_delim="${2:-$DEP_ATTR_DELIM}"
 
+		OLD_PATH="$PATH"
+		#this is done because in some linux distributions /sbin and /usr/sbin are not in PATH, like debian
+		PATH=$PATH:/sbin:/usr/sbin
 		while read -r line;do
 				cmd="$(_dep_attr_extract "$line" "$DEP_CMD_POS" "$dep_attr_delim")"
 				log $LOG_LVL_DEBUG "[$0]: checking cmd $cmd"
 
-				if ! type $cmd &>/dev/null;then
+				if ! type "$cmd" &>/dev/null;then
 						log "$LOG_LVL_ERROR" "[$0]: missing dependancy : $(_dep_attr_extract "$line" "$DEP_NAME_POS" "$dep_attr_delim")"
 						IFS="$OLD_IFS"
 						return 1
 				fi
 
 		done <<<"$deps"
+		PATH="$OLD_PATH"
 
 		return 0
 }
