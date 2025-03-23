@@ -13,7 +13,6 @@ dnsutils,nslookup
 isc-dhcp-client,dhclient\
 "
 
-
 #terminal colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -112,7 +111,7 @@ VERBOSE_LOG_LVL=50
 DEBUG_LOG_LVL=100
 
 
-#renamed to __CURRENT_LOG_LVL to resolve conflict with abs.bin.logging
+#renamed to __CURRENT_LOG_LVL to resolve conflict with abs.lib.logging
 _CURRENT_LOG_LVL=$DEFAULT_LOG_LVL
 
 #COMMANDNAME_SWITCHES are used along each COMMANDNAME, this is portability (to test if different switches work on current machine)
@@ -126,7 +125,7 @@ ASSUMED_RELIABLE_IP="127.0.0.1"
 #WARNING! ASSUMED_RELIABLE_IP must be reachable via ASSUMED_AVAILABLE_INTERFACE_NAME
 ASSUMED_AVAILABLE_INTERFACE_NAME="lo"
 
-#renamed to _log to resolve conflict with abs.bin.logging
+#renamed to _log to resolve conflict with abs.lib.logging
 function _log {
  	string="$1"
 	_log_level="$2"
