@@ -13,6 +13,14 @@ dnsutils,nslookup
 isc-dhcp-client,dhclient\
 "
 
+WIFI_DEPENDANCIES_CMD="\
+iwd,iwctl
+network-manager,NetworkManager
+awesome bash scripts binary modules,abs.bin.TryToConnectToAccessPoint
+awesome bash scripts binary modules,abs.bin.NetworkManager-GetAllAccessPoints
+awesome bash scripts binary modules,abs.bin.GetAllWifiDevices\
+"
+
 #terminal colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -402,7 +410,7 @@ function restart_interface {
 
 		
 		interface_name="$1"
-		_log "${BLUE}[*] restarting interface $interface_name" $VERBOSE_LOG_LVL
+		_log "${BLUE}[*] restarting interface $interface_name${NC}" $VERBOSE_LOG_LVL
 		sudo ip link set $interface_name "down"
 		errno=$?
 		if [[ $errno != 0 ]];then
@@ -670,15 +678,15 @@ ACCESSPOINTS=""
 
 function init_wifi_devs {
 	WIFI_DEVS="$(abs.bin.GetAllWifiDevices --detailed 2>/dev/null)"
-	_log "${BLUE}[*] found wifi devices:" $VERBOSE_LOG_LVL
-	_log "${BLUE}[*] $WIFI_DEVS" $VERBOSE_LOG_LVL
+	_log "${BLUE}[*] found wifi devices:${NC}" $VERBOSE_LOG_LVL
+	_log "${BLUE}[*] $WIFI_DEVS${NC}" $VERBOSE_LOG_LVL
 }
 
 function init_accesspoints {
-	_log "${BLUE}[*] scanning for accesspoints" $_CURRENT_LOG_LVL
+	_log "${BLUE}[*] scanning for accesspoints${NC}" $_CURRENT_LOG_LVL
 	ACCESSPOINTS="$(abs.bin.NetworkManager-GetAllAccessPoints --detailed 2>/dev/null)"
-	_log "${BLUE}[*] found accesspoints:" $VERBOSE_LOG_LVL
-	_log "${BLUE}[*] $ACCESSPOINTS:" $VERBOSE_LOG_LVL
+	_log "${BLUE}[*] found accesspoints:${NC}" $VERBOSE_LOG_LVL
+	_log "${BLUE}[*] $ACCESSPOINTS:${NC}" $VERBOSE_LOG_LVL
 
 	found_ap_ssids=""
 
@@ -687,7 +695,7 @@ function init_accesspoints {
 	for accesspoint in $ACCESSPOINTS;do
 		found_ap_ssids="${found_ap_ssids} $(get_accesspoint_ssid "$accesspoint")"
 	done
-	_log "${BLUE}[*] found wifi accesspoints: $found_ap_ssids" $_CURRENT_LOG_LVL
+	_log "${BLUE}[*] found wifi accesspoints: $found_ap_ssids${NC}" $_CURRENT_LOG_LVL
 }
 
 function get_wifi_dev_interface_name {
@@ -715,7 +723,11 @@ function get_wifi_dev_from_interface_name {
 	IFS="$OLD_IFS"
 }
 
+DENY_IS_WIFI=0
 function is_wifi {
+	if [[ $DENY_IS_WIFI -ne 0 ]];then
+		return 1
+	fi
 	interface_name="$1"
 
 	errno=1
@@ -762,7 +774,7 @@ function try_to_fix_interface_wireless {
 		if [[ $errno -ne 0 ]];then
 			continue
 		fi
-		_log "${BLUE}[*] connected to wireless network $(get_accesspoint_ssid $accesspoint)" $_CURRENT_LOG_LVL
+		_log "${BLUE}[*] connected to wireless network $(get_accesspoint_ssid $accesspoint)${NC}" $_CURRENT_LOG_LVL
 		if ! check_lan_connectivity "$interface_name" ;then
 			dhcp_renew "$interface_name"
 		fi
@@ -801,6 +813,10 @@ function main {
 
 		if ! depcheck_cmd_fromstr "$ESSENTIAL_DEPENDANCIES_CMD"; then
 			exit 1
+		fi
+		if ! depcheck_cmd_fromstr "$WIFI_DEPENDANCIES_CMD"; then
+			DENY_IS_WIFI=1
+			_log "${YELLOW}[-] wifi support dependencies are not met, will treat wifi interfaces like wired interfaces${NC}" $_CURRENT_LOG_LVL
 		fi
 		
 		handle_args $@
