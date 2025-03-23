@@ -13,7 +13,6 @@ import (
 )
 
 var args struct {
-	Detailed bool
 	No_sleep bool `default:false`
 	AccessPoint_Path string `arg:"required"`
 	Device_Path string `arg:"required"`
