@@ -755,6 +755,7 @@ function try_to_fix_interface_wireless {
 		fi
 		if check_internet_connectivity "$interface_name" ;then
 			errno=0
+			# we don't care about other accesspoints if we reach the internet via the currrent one
 			break
 		fi
 	done
@@ -770,6 +771,8 @@ function try_to_fix_interface {
 
 	if is_wifi "$interface_name";then
 		try_to_fix_interface_wireless "$interface_name"
+		# try_to_fix_interface_wireless will call check_internet_connectivity, because it needs to know if the 
+		# accesspoint it is currently connected to provides internet or not, so it can return 0 if internet connectivity is achived
 		return $?
 	else
 		try_to_fix_interface_wired "$interface_name"
