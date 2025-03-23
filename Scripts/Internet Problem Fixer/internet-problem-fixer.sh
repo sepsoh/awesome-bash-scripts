@@ -666,6 +666,15 @@ function init_accesspoints {
 	ACCESSPOINTS="$(abs.bin.NetworkManager-GetAllAccessPoints --detailed 2>/dev/null)"
 	log "${BLUE}[*] found accesspoints:" $VERBOSE_LOG_LVL
 	log "${BLUE}[*] $ACCESSPOINTS:" $VERBOSE_LOG_LVL
+
+	found_ap_ssids=""
+
+	IFS="$OLD_IFS"
+	IFS="$ACCESSPOINTS_DELIM"
+	for accesspoint in $ACCESSPOINTS;do
+		found_ap_ssids="${found_ap_ssids} $(get_accesspoint_ssid "$accesspoint")"
+	done
+	log "${BLUE}[*] found wifi accesspoints: $found_ap_ssids" $CURRENT_LOG_LVL
 }
 
 function get_wifi_dev_interface_name {
