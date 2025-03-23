@@ -656,14 +656,14 @@ ACCESSPOINTS_DELIM=$'\n'
 ACCESSPOINTS=""
 
 function init_wifi_devs {
-	WIFI_DEVS="$(abs.bin.GetAllWifiDevices --detailed)"
+	WIFI_DEVS="$(abs.bin.GetAllWifiDevices --detailed 2>/dev/null)"
 	log "${BLUE}[*] found wifi devices:" $VERBOSE_LOG_LVL
 	log "${BLUE}[*] $WIFI_DEVS" $VERBOSE_LOG_LVL
 }
 
 function init_accesspoints {
 	log "${BLUE}[*] scanning for accesspoints" $CURRENT_LOG_LVL
-	ACCESSPOINTS="$(abs.bin.NetworkManager-GetAllAccessPoints --detailed)"
+	ACCESSPOINTS="$(abs.bin.NetworkManager-GetAllAccessPoints --detailed 2>/dev/null)"
 	log "${BLUE}[*] found accesspoints:" $VERBOSE_LOG_LVL
 	log "${BLUE}[*] $ACCESSPOINTS:" $VERBOSE_LOG_LVL
 }
@@ -733,8 +733,9 @@ function try_to_fix_interface_wireless {
 	for accesspoint in $ACCESSPOINTS;do
 		device="$(get_wifi_dev_from_interface_name "$interface_name")"
 		abs.bin.TryToConnectToAccessPoint \
-			--accesspoint_path $(get_accesspoint_path "$accesspoint")\
-			--device_path $(get_wifi_dev_path "$device")
+			--accesspoint_path $(get_accesspoint_path "$accesspoint" 2>/dev/null)\
+			--device_path $(get_wifi_dev_path "$device" 2>/dev/null)\
+			2>/dev/null
 		err=$?
 		if [[ $err -ne 0 ]];then
 			continue
