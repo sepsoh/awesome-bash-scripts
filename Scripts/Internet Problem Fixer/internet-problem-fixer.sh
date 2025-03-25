@@ -511,8 +511,6 @@ function handle_args {
 							TIMEOUT="$OPTARG";;
 					c) 		
 							PING_COUNT="$OPTARG";;
-					f)
-							EXCLUDED_INTERFACES_FILE="$OPTARG";;
 					?)    
 							echo -e $HELP
 							exit 1;;
