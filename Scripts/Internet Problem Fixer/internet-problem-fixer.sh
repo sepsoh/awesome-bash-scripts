@@ -626,7 +626,14 @@ function init_determine_target_interfaces {
 				return
 		fi
 
-		TARGET_INTERFACES="$(get_interfaces_with_default_gw)"
+		#this was initially a get_interfaces_with_default_gw call, but changed to get_all_interfaces call because:
+		#1: wifi device may seem to be down because the system is using iwd
+		#1-1: if we add wifi devices to TARGET_INTERFACES regardless of it's state, 
+		#the later call on restart_and_renew_all_interfaces in main will probably be unreachable since there is always the wifi device in the TARGET_INTERFACES
+		#2: if we don't add wifi device in this function, it would be unreliable since we want it to populate TARGET_INTERFACES correctly
+		#3: testing all interfaces is way simpler than trying to figure out(reliably, since only this function manipulates TARGET_INTERFACES) what interfaces might be able to reach internet
+		#TODO one negative side effect of this change is that any bridge interface will be included in TARGET_INTERFACES, maybe we can figure out what to do about this
+		TARGET_INTERFACES="$(get_all_interfaces)"
 		TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
 
 
@@ -813,21 +820,15 @@ function main {
 		if ip addr | grep tun >$REDIRECT_DEST;then
 				_log "${YELLOW}[!] please turn off your vpn${NC}" $DEFAULT_LOG_LVL
 		fi
-		init_determine_target_interfaces
-		init_ping_switches
 		init_wifi_devs
 		init_accesspoints
+		init_determine_target_interfaces
+		init_ping_switches
 
 		#if no interface with default gateway found
 		if [ -z "$TARGET_INTERFACES" ];then
-				#might want to add default gateway based on icmp scan?
-				_log "${RED}[-] no interfaces to get to internet refreshing all interfaces${NC}" $DEFAULT_LOG_LVL
-				restart_and_renew_all_interfaces
-				init_determine_target_interfaces
-				if [ -z "$TARGET_INTERFACES" ];then
-					_log "${RED}[-] no interfaces to get to internet exiting${NC}" $DEFAULT_LOG_LVL
-					exit 1
-				fi
+				_log "${RED}[-] no interfaces to get to internet exiting${NC}" $DEFAULT_LOG_LVL
+				exit 1
 		fi
 
 
