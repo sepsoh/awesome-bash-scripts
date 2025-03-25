@@ -857,6 +857,10 @@ function main {
 						fi
 
 				done		
+
+				if [[ $INTERNET_STATE -eq 1 ]];then
+					exit 0
+				fi
 		done
 		IFS=$OLD_IFS
 }
