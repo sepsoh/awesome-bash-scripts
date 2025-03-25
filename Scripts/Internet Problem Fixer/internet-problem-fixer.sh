@@ -809,8 +809,9 @@ function main {
 				exec sudo bash $0 $@
 		fi
 
+		#if there's a interface that has 'tun' in it, it's probably a tunnel interface, we advice the user to turn off the vpn
 		if ip addr | grep tun >$REDIRECT_DEST;then
-				_log "${YELLOW}please turn off your vpn${NC}" $DEFAULT_LOG_LVL
+				_log "${YELLOW}[!] please turn off your vpn${NC}" $DEFAULT_LOG_LVL
 		fi
 		init_determine_target_interfaces
 		init_ping_switches
