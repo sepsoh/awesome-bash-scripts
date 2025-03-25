@@ -1,4 +1,0 @@
-lo
-docker0
-tun0
-neko-tun
