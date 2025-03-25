@@ -143,7 +143,7 @@ function _log {
 	dest=1
 
 	if [[ $_CURRENT_LOG_LVL -ge $_log_level ]];then
-			echo -e $string>&$dest
+			echo -e "$string">&$dest
 	fi
 }
 
@@ -160,7 +160,7 @@ function get_interfaces_with_default_gw {
 function get_default_gws_of_interface {
 #default gateways of interface
 		interface_name="$1"
-		ip route | grep -E "^default" | grep $interface_name | grep -o -E "$IPV4_REGEX" | tr $'\n' ' '
+		ip route | grep -E "^default" | grep "$interface_name" | grep -o -E "$IPV4_REGEX" | tr $'\n' ' '
 }
 
 function get_interface_ipv4s {
@@ -184,7 +184,7 @@ function check_internet_connectivity {
 		OLD_IFS=$IFS
 		IFS=" "
 		for host in ${ping_dest[@]};do
-				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
+				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I "$interface_name" $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
 						PRIVATE_IP_STATE=1
 						LAN_STATE=1
@@ -216,7 +216,7 @@ function check_intranet_connectivity {
 		OLD_IFS=$IFS
 		IFS=" "
 		for host in ${ping_dest[@]};do
-				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
+				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I "$interface_name" $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
 						PRIVATE_IP_STATE=1
 						LAN_STATE=1
@@ -234,7 +234,7 @@ function check_intranet_connectivity {
 function check_lan_connectivity {
 #ping default gateway
 		interface_name="$1"
-		default_gws=$(get_default_gws_of_interface $interface_name)
+		default_gws=$(get_default_gws_of_interface "$interface_name")
 
 		_log "${BLUE}[*] checking LAN connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
 		_log "gateways of $interface_name: $default_gws" $DEBUG_LOG_LVL
@@ -243,7 +243,7 @@ function check_lan_connectivity {
 		OLD_IFS=$IFS
 		IFS=" "
 		for host in $default_gws;do
-				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $host>&$REDIRECT_DEST;then
+				if ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I "$interface_name" $host>&$REDIRECT_DEST;then
 						INTERFACE_STATE=1
 						PRIVATE_IP_STATE=1
 						LAN_STATE=1
@@ -291,7 +291,7 @@ function check_dns {
 
 function check_interface_self_connectivity {
 		interface_name="$1"
-		interface_ips=$(get_interface_ipv4s $interface_name)
+		interface_ips=$(get_interface_ipv4s "$interface_name")
 		
 		_log "${BLUE}[*] checking interface self connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
 		_log "interface ips of $interface_name: $interface_ips" $DEBUG_LOG_LVL
@@ -299,7 +299,7 @@ function check_interface_self_connectivity {
 		OLD_IFS=$IFS
 		IFS=$' '
 		for ip in $interface_ips;do
-				ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I $interface_name $ip >&$REDIRECT_DEST
+				ping $PING_SWITCHES -W $TIMEOUT -c $PING_COUNT -I "$interface_name" $ip >&$REDIRECT_DEST
 				errno=$?
 				if [[ $errno != 0 ]];then
 						_log "${RED}[-] $ip is not  reachable via $interface_name${NC}" $VERBOSE_LOG_LVL
@@ -375,27 +375,27 @@ function set_network_states {
 
 function check_all_on_interface {
 		interface_name="$1"
-		check_interface_self_connectivity $interface_name
+		check_interface_self_connectivity "$interface_name"
 		errno=$?
 		if [[ $errno != 0 ]];then
 				return 1 	
 		fi
-		check_lan_connectivity $interface_name
+		check_lan_connectivity "$interface_name"
 		errno=$?
 		if [[ $errno != 0 ]];then
 				return 1 	
 		fi
 		#protocols must be checked as soon as lan seems to be connected
 		#we won't return of the protocol is not available
-		check_dns $interface_name
+		check_dns "$interface_name"
 		errno=$?
 
-		check_intranet_connectivity $interface_name
+		check_intranet_connectivity "$interface_name"
 		errno=$?
 		if [[ $errno != 0 ]];then
 				return 1 	
 		fi
-		check_internet_connectivity $interface_name
+		check_internet_connectivity "$interface_name"
 		errno=$?
 		if [[ $errno != 0 ]];then
 				return 1 	
@@ -410,14 +410,14 @@ function restart_interface {
 		
 		interface_name="$1"
 		_log "${BLUE}[*] restarting interface $interface_name${NC}" $VERBOSE_LOG_LVL
-		sudo ip link set $interface_name "down"
+		sudo ip link set "$interface_name" "down"
 		errno=$?
 		if [[ $errno != 0 ]];then
 				_log "${RED}failed to shutdown $interface_name${NC}" $VERBOSE_LOG_LVL
 				return 1
 		fi		
 
-		sudo ip link set $interface_name up
+		sudo ip link set "$interface_name" up
 		errno=$?
 		if [[ $errno != 0 ]];then
 				_log "${RED} failed to bring up $interface_name${NC}" $VERBOSE_LOG_LVL
@@ -432,14 +432,14 @@ function dhcp_renew {
 		
 		interface_name="$1"
 		_log "${BLUE}[*] renewing ip of $interface_name${NC}" $VERBOSE_LOG_LVL
-		sudo dhclient -r $interface_name>&$REDIRECT_DEST
+		sudo dhclient -r "$interface_name">&$REDIRECT_DEST
 		errno=$?
 		if [[ $errno != 0 ]];then
 				_log "${RED}[-] failed to release ip of $interface_name${NC}" $VERBOSE_LOG_LVL
 				return 1
 		fi		
 
-		sudo dhclient -nw $interface_name>&$REDIRECT_DEST
+		sudo dhclient -nw "$interface_name">&$REDIRECT_DEST
 		errno=$?
 		if [[ $errno != 0 ]];then
 				_log "${RED}[-] failed to renew ip of $interface_name${NC}" $VERBOSE_LOG_LVL
@@ -452,8 +452,8 @@ function dhcp_renew {
 function restart_and_renew_interface {
 #this exist because we may need to set other attributes too, like mtu, ttl
 		interface_name="$1"
-		restart_interface $interface_name
-		dhcp_renew $interface_name
+		restart_interface "$interface_name"
+		dhcp_renew "$interface_name"
 }
 
 function restart_and_renew_all_interfaces {
@@ -462,9 +462,9 @@ function restart_and_renew_all_interfaces {
 	_log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
 
 	OLD_IFS=$IFS
-	IFS=$INTERFACE_LIST_DELIMITER
+	IFS="$INTERFACE_LIST_DELIMITER"
 	for interface in $TARGET_INTERFACES;do
-			restart_and_renew_interface $interface
+			restart_and_renew_interface "$interface"
 	done
 	IFS=$OLD_IFS
 }
@@ -481,10 +481,10 @@ function try_to_fix_interface_wired {
 
 		if [[ $INTERFACE_STATE = 0 ]];then
 				_log "${BLUE}[*] restarting interface $interface_name${NC}" $VERBOSE_LOG_LVL
-				restart_interface $interface_name
+				restart_interface "$interface_name"
 		fi
 		if [[ $PRIVATE_IP_STATE = 0 ]];then
-				dhcp_renew $interface_name
+				dhcp_renew "$interface_name"
 		fi
 }
 
@@ -595,12 +595,12 @@ function remove_list_from_list {
 		delimiter_of_remove_list="$4"
 
 		if [ -z "$remove_list" ];then
-				echo $list
+				echo "$list"
 				return
 		fi
 
-		remove_list="$(scape_sed_special_chars $remove_list)"
-		delimiter_of_list="$(scape_sed_special_chars $delimiter_of_list)"
+		remove_list="$(scape_sed_special_chars "$remove_list")"
+		delimiter_of_list="$(scape_sed_special_chars "$delimiter_of_list")"
 
 		OLD_IFS=$IFS
 		IFS="$delimiter_of_remove_list"
@@ -620,7 +620,7 @@ function remove_list_from_list {
 
 function init_determine_target_interfaces {
 
-		if [ -n $INCLUDED_INTERFACES ];then
+		if [ -n "$INCLUDED_INTERFACES" ];then
 				TARGET_INTERFACES="$INCLUDED_INTERFACES"
 				_log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
 				return
@@ -756,7 +756,7 @@ function try_to_fix_interface_wireless {
 		if [[ $errno -ne 0 ]];then
 			continue
 		fi
-		_log "${BLUE}[*] connected to wireless network $(get_accesspoint_ssid $accesspoint)${NC}" $_CURRENT_LOG_LVL
+		_log "${BLUE}[*] connected to wireless network $(get_accesspoint_ssid "$accesspoint")${NC}" $_CURRENT_LOG_LVL
 		if ! check_lan_connectivity "$interface_name" ;then
 			dhcp_renew "$interface_name"
 		fi
@@ -847,11 +847,11 @@ function main {
 						_log "${YELLOW}[*] troubleshooting $interface${NC}" $DEFAULT_LOG_LVL
 						CURRENT_INTERFACE=$interface
 						
-						check_all_on_interface $interface
+						check_all_on_interface "$interface"
 						echo_network_states
 						
 						if [[ $TRY_TO_FIX = 1 ]] && [[ $INTERNET_STATE -ne 1 ]];then
-								try_to_fix_interface $interface
+								try_to_fix_interface "$interface"
 						fi
 
 				done		
