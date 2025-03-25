@@ -5,7 +5,6 @@ source abs.lib.depcheck
 #used to push and pop IFS
 OLD_IFS=$IFS
 
-
 ESSENTIAL_DEPENDANCIES_CMD="\
 inetutils-ping,ping
 iproute2,ip
@@ -48,7 +47,6 @@ Options:\n\
 \t\t*reserved switches: (-A, -I, -c, -W) there are other switches to set arbitrary value for -c, -W\n\
 \t-W TIMEOUT\t\t\tset value for -W switch of ping\n\
 \t-c COUNT\t\t\tset value for -c switch of ping\n\
-\t-f EXCLUDED_INTERFACES_FILE\tname of the file to load from which the interface names to ignore\n
 \n\
 Usage Examples:\n\
 \t$0 -i eth0,wlan0\ttroubleshoot only eth0 and wlan0 interfaces\n\
@@ -57,8 +55,6 @@ Usage Examples:\n\
 \t$0 -p \"-t=64,-r\"\tput -t 64 -r before other ping switches (like ping YOUR_SWITCHES SCRIPT_SCWITCHES DESTINATION)
 "
 
-#FILE variables, used to load information such as excluded interfaces
-EXCLUDED_INTERFACES_FILE="interface_ignore.txt"
 
 #google dns primary and secondary, example.com, google.com
 INTERNET_IPV4S=("8.8.8.8" "8.8.4.4" "93.184.215.14" "142.250.184.206")
@@ -102,6 +98,9 @@ TARGET_INTERFACES=""
 #script runs for the first target and after the fix can run for the other
 CURRENT_INTERFACE=""
 #-x --exclude input
+DEFAULT_EXCLUDED_INTERFACES="\
+lo${INTERFACE_LIST_DELIMITER}docker0${INTERFACE_LIST_DELIMITER}neko-tun${INTERFACE_LIST_DELIMITER}tun0\
+"
 EXCLUDED_INTERFACES=""
 #-i --interface input
 INCLUDED_INTERFACES=""
@@ -428,6 +427,7 @@ function restart_interface {
 		sleep $INTERFACE_CHANGE_STATE_SLEEP
 }
 
+
 function dhcp_renew {
 		
 		interface_name="$1"
@@ -454,6 +454,19 @@ function restart_and_renew_interface {
 		interface_name="$1"
 		restart_interface $interface_name
 		dhcp_renew $interface_name
+}
+
+function restart_and_renew_all_interfaces {
+	TARGET_INTERFACES="$(get_all_interfaces)"
+	TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
+	_log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
+
+	OLD_IFS=$IFS
+	IFS=$INTERFACE_LIST_DELIMITER
+	for interface in $TARGET_INTERFACES;do
+			restart_and_renew_interface $interface
+	done
+	IFS=$OLD_IFS
 }
 
 function set_reliable_dns {
@@ -505,6 +518,11 @@ function handle_args {
 							exit 1;;
 					esac
 		done
+
+		if [ -z "$EXCLUDED_INTERFACES" ];then
+			_log "${YELLOW}[!] the following interfaces are ignored by default, use -x to change: $DEFAULT_EXCLUDED_INTERFACES${NC}" $CURRENT_LOG_LVL
+			EXCLUDED_INTERFACES="$DEFAULT_EXCLUDED_INTERFACES"
+		fi
 
 }
 
@@ -612,34 +630,6 @@ function init_determine_target_interfaces {
 		TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
 
 
-		if [ -z "$TARGET_INTERFACES" ];then
-				if [[ $TRY_TO_FIX = 1 ]];then
-						#might want to add default gateway based on icmp scan?
-						_log "${RED}[-] no interfaces to get to internet refreshing all interfaces${NC}" $DEFAULT_LOG_LVL
-						TARGET_INTERFACES="$(get_all_interfaces)"
-						TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
-						_log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
-
-						OLD_IFS=$IFS
-						IFS=$INTERFACE_LIST_DELIMITER
-						for interface in $TARGET_INTERFACES;do
-								restart_and_renew_interface $interface
-						done
-						IFS=$OLD_IFS
-
-						TARGET_INTERFACES=$(get_interfaces_with_default_gw)
-						TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
-				fi
-				if [ -z "$TARGET_INTERFACES" ];then
-						_log "${RED}[-] no interfaces to get to internet exiting${NC}" $DEFAULT_LOG_LVL
-						exit 1
-				fi
-				TARGET_INTERFACES=$(get_interfaces_with_default_gw)
-				TARGET_INTERFACES="$(remove_list_from_list "$TARGET_INTERFACES" "$INTERFACE_LIST_DELIMITER" "$EXCLUDED_INTERFACES" "$INTERFACE_LIST_DELIMITER")"
-				
-		fi
-
-
 		_log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
 
 }
@@ -653,14 +643,6 @@ function init_ping_switches {
 		fi
 
 		_log "ping options: $PING_SWITCHES" $DEBUG_LOG_LVL
-}
-
-function init_load_exclude_interface {
-
-		#add loaded exclude list to the EXCLUDED_INTERFACES
-		EXCLUDED_INTERFACES="$(cat $EXCLUDED_INTERFACES_FILE 2>/dev/null | tr $'\n' $INTERFACE_LIST_DELIMITER)${EXCLUDED_INTERFACES}"
-
-		_log "${BLUE}loaded interface names to exclude: $EXCLUDED_INTERFACES${NC}" $DEBUG_LOG_LVL
 }
 
 #start of wifi support 
@@ -809,6 +791,7 @@ function try_to_fix_interface {
 	fi
 }
 
+
 function main {
 
 		if ! depcheck_cmd_fromstr "$ESSENTIAL_DEPENDANCIES_CMD"; then
@@ -829,11 +812,23 @@ function main {
 		if ip addr | grep tun >$REDIRECT_DEST;then
 				_log "${YELLOW}please turn off your vpn${NC}" $DEFAULT_LOG_LVL
 		fi
-		init_load_exclude_interface
 		init_determine_target_interfaces
 		init_ping_switches
 		init_wifi_devs
 		init_accesspoints
+
+		#if no interface with default gateway found
+		if [ -z "$TARGET_INTERFACES" ];then
+				#might want to add default gateway based on icmp scan?
+				_log "${RED}[-] no interfaces to get to internet refreshing all interfaces${NC}" $DEFAULT_LOG_LVL
+				restart_and_renew_all_interfaces
+				init_determine_target_interfaces
+				if [ -z "$TARGET_INTERFACES" ];then
+					_log "${RED}[-] no interfaces to get to internet exiting${NC}" $DEFAULT_LOG_LVL
+					exit 1
+				fi
+		fi
+
 
 		_log "${YELLOW}[*] interfaces to troubleshoot: $TARGET_INTERFACES${NC}" $VERBOSE_LOG_LVL
 		if [[ $_CURRENT_LOG_LVL -ge $DEBUG_LOG_LVL ]];then
