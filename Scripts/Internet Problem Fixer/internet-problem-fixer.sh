@@ -620,7 +620,7 @@ function remove_list_from_list {
 
 function init_determine_target_interfaces {
 
-		if ! [ -z $INCLUDED_INTERFACES ];then
+		if [ -n $INCLUDED_INTERFACES ];then
 				TARGET_INTERFACES="$INCLUDED_INTERFACES"
 				_log "targeted interfaces: $TARGET_INTERFACES" $DEBUG_LOG_LVL
 				return
