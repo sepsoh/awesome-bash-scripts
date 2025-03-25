@@ -799,7 +799,7 @@ function main {
 		fi
 		if ! depcheck_cmd_fromstr "$WIFI_DEPENDANCIES_CMD"; then
 			DENY_IS_WIFI=1
-			_log "${YELLOW}[-] wifi support dependencies are not met, will treat wifi interfaces like wired interfaces${NC}" $_CURRENT_LOG_LVL
+			_log "${YELLOW}[!] wifi support dependencies are not met, will treat wifi interfaces like wired interfaces${NC}" $_CURRENT_LOG_LVL
 		fi
 		
 		handle_args $@
