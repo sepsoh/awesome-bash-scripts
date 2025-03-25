@@ -519,11 +519,13 @@ function handle_args {
 					esac
 		done
 
+}
+
+function assign_default_value_args {
 		if [ -z "$EXCLUDED_INTERFACES" ];then
 			_log "${YELLOW}[!] the following interfaces are ignored by default, use -x to change: $DEFAULT_EXCLUDED_INTERFACES${NC}" $CURRENT_LOG_LVL
 			EXCLUDED_INTERFACES="$DEFAULT_EXCLUDED_INTERFACES"
 		fi
-
 }
 
 function is_current_interface_ok {
@@ -809,12 +811,13 @@ function main {
 			_log "${YELLOW}[!] wifi support dependencies are not met, will treat wifi interfaces like wired interfaces${NC}" $_CURRENT_LOG_LVL
 		fi
 		
+		#will assign default value of args when we ensured the script won't be called recursivly again, so each warning is shown once
+		#so we call assign_default_value_args after the potential exec sudo bash $0 $@
 		handle_args $@
-
-		
 		if [[ $TRY_TO_FIX = 1 ]] && [[ $EUID != 0 ]];then
-				exec sudo bash $0 $@
+				exec sudo bash "$0" $@
 		fi
+		assign_default_value_args
 
 		#if there's a interface that has 'tun' in it, it's probably a tunnel interface, we advice the user to turn off the vpn
 		if ip addr | grep tun >$REDIRECT_DEST;then
