@@ -13,7 +13,6 @@ isc-dhcp-client,dhclient\
 "
 
 WIFI_DEPENDANCIES_CMD="\
-iwd,iwctl
 network-manager,NetworkManager
 awesome bash scripts binary modules,abs.bin.TryToConnectToAccessPoint
 awesome bash scripts binary modules,abs.bin.NetworkManager-GetAllAccessPoints
@@ -42,6 +41,7 @@ Options:\n\
 \t-d\t\t\t\tdebug: redirect the used commands to stdout\n\
 \t-n\t\t\t\tno fix: don't try to fix ( eliminate the requirement for the script to be root )\n\
 \t-i INTERFACE_NAMES\t\tinclude interface: troubleshoot the provided interfaces only if used. -x will be ignored\n\
+\t-I \t\t\t\tinteractive mode: if not set user won't be asked for input and will not be prompted for anything\n\
 \t-x INTERFACE_NAMES\t\texclude interface: ignore the provided interfaces\n\
 \t-p PING_OPTION=VALUE,..\t\tpass arbitrary switches to pings used in the script, seperated by ',' and wrappen in double qoutes '\"'\n\
 \t\t*reserved switches: (-A, -I, -c, -W) there are other switches to set arbitrary value for -c, -W\n\
@@ -131,6 +131,9 @@ PING_SWITCHES=""
 ASSUMED_RELIABLE_IP="127.0.0.1"
 #WARNING! ASSUMED_RELIABLE_IP must be reachable via ASSUMED_AVAILABLE_INTERFACE_NAME
 ASSUMED_AVAILABLE_INTERFACE_NAME="lo"
+
+#if is zero-length will not prompt for any input, will be overwritten by handle_args()
+INTERACTIVE_MODE=""
 
 #renamed to _log to resolve conflict with abs.lib.logging
 function _log {
@@ -314,6 +317,89 @@ function check_interface_self_connectivity {
 		return 0
 }
 
+function check_daemon {
+	daemon="$1"
+	local do_prompt="$2"
+	confirm='n'
+
+	if ! systemctl is-active "$daemon" &>$REDIRECT_DEST;then
+			_log "${YELLOW}[!] $daemon is not running${NC}" "$_CURRENT_LOG_LVL" 
+		if [ -n "$do_prompt" ];then
+			_log "start and enable?[y/N]" "$_CURRENT_LOG_LVL"
+			read -r confirm
+		fi
+
+		start_success=1 #err code
+		if [ "$confirm" = 'y' ] || [ "$confirm" = 'Y' ];then
+			sudo systemctl enable --now "$daemon" &>$REDIRECT_DEST
+			start_success=$?
+		fi
+
+		if [ -n "$do_prompt" ] && [[ $start_success -eq 0 ]];then
+			_log "${GREEN}[+] $daemon successfully started${NC}" "$_CURRENT_LOG_LVL"
+		else
+			_log "${RED}[-] failed to start $daemon ${NC}" "$_CURRENT_LOG_LVL"
+		fi
+	fi
+
+	systemctl is-active "$daemon" &>$REDIRECT_DEST
+	return $?
+}
+
+# check_daemon_* functions check if daemons needed for a certain feature are running or not
+# Parameters: 
+# 	do_prompt: if non-zero length then prompt the user to start and enable the daemon if not running
+# Returns:
+# 	non-zero on error
+
+# checks for NetworkManager, iwd || wpa_supplicant
+function check_daemon_wireless_support {
+	do_prompt="$1"
+
+	check_daemon "NetworkManager" "$do_prompt"
+	networkmanager_status=$?
+	
+	if [[ $networkmanager_status -ne 0 ]];then
+		_log "networkmanager_status=$networkmanager_status" "$DEBUG_LOG_LVL"
+		return $networkmanager_status
+	fi
+
+	
+	#why i called check_daemon two times for each of the iwd and wpa_supplicant?
+	#answer: iwd and wpa_supplicant conflict with each other and should not be running both at the same time, 
+	# 	 - so if either of them are running we don't need to do anything 
+	# 	 	(note that the first check_daemon for each daemon are called with $do_prompt off, so we are only checking if they are active)
+	# 	 - if non of them are active we try to start only one of them
+	#output of the following two check_daemon's will be shown when we determine which of them are installed
+	check_daemon "iwd" "" >/dev/null
+	iwd_status=$?
+
+	check_daemon "wpa_supplicant" "" >/dev/null
+	wpa_supplicant_status=$?
+
+	#if both are non-zero, then both failed (errcode != 0)
+	if ((iwd_status && wpa_supplicant_status));then
+		if type iwctl &>$REDIRECT_DEST;then
+			check_daemon "iwd" "$do_prompt"
+			iwd_status=$?
+		elif type wpa_supplicant &>$REDIRECT_DEST;then
+			check_daemon "wpa_supplicant" "$do_prompt"
+			wpa_supplicant_status=$?
+		else
+			_log "${RED}[-] neither of iwd or wpa_supplicant are installed, at least one of them is needed for wifi support" "$_CURRENT_LOG_LVL"
+		fi
+	fi
+
+	_log "iwd_status=$iwd_status, wpa_supplicant_status=$wpa_supplicant_status" "$DEBUG_LOG_LVL"
+	
+	if [[ $iwd_status -ne 0 ]] && [[ $wpa_supplicant_status -ne 0 ]];then
+		return 1
+	fi
+
+	return 0
+
+}
+
 function echo_state {
 		state="$1"
 		msg="$2"
@@ -490,7 +576,7 @@ function try_to_fix_interface_wired {
 
 function handle_args {
 
-		while getopts "vdhni:x:p:W:c:f:" name;do
+		while getopts "vdhni:Ix:p:W:c:f:" name;do
 					case $name in
 					v)
 							_CURRENT_LOG_LVL=$VERBOSE_LOG_LVL;;
@@ -503,6 +589,8 @@ function handle_args {
 							TRY_TO_FIX=0;;
 					i)
 							INCLUDED_INTERFACES="$OPTARG";;
+					I)
+							INTERACTIVE_MODE=1;;
 					x)
 							EXCLUDED_INTERFACES="$OPTARG";;
 					p) 		
@@ -800,14 +888,6 @@ function try_to_fix_interface {
 
 
 function main {
-
-		if ! depcheck_cmd_fromstr "$ESSENTIAL_DEPENDANCIES_CMD"; then
-			exit 1
-		fi
-		if ! depcheck_cmd_fromstr "$WIFI_DEPENDANCIES_CMD"; then
-			DENY_IS_WIFI=1
-			_log "${YELLOW}[!] wifi support dependencies are not met, will treat wifi interfaces like wired interfaces${NC}" $_CURRENT_LOG_LVL
-		fi
 		
 		#will assign default value of args when we ensured the script won't be called recursivly again, so each warning is shown once
 		#so we call assign_default_value_args after the potential exec sudo bash $0 $@
@@ -816,6 +896,22 @@ function main {
 				exec sudo bash "$0" $@
 		fi
 		assign_default_value_args
+
+		if ! depcheck_cmd_fromstr "$ESSENTIAL_DEPENDANCIES_CMD"; then
+			exit 1
+		fi
+
+		depcheck_cmd_fromstr "$WIFI_DEPENDANCIES_CMD"
+		wifi_dependancies_met=$?
+		check_daemon_wireless_support $INTERACTIVE_MODE
+		wifi_daemons_running=$?
+
+		if ((wifi_dependancies_met || wifi_daemons_running));then
+			DENY_IS_WIFI=1
+			_log "${YELLOW}[!] wifi support dependencies are not met, will treat wifi interfaces like wired interfaces${NC}" $_CURRENT_LOG_LVL
+		fi
+		
+
 
 		#if there's a interface that has 'tun' in it, it's probably a tunnel interface, we advice the user to turn off the vpn
 		if ip addr | grep tun >$REDIRECT_DEST;then
