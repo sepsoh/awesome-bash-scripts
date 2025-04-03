@@ -33,6 +33,8 @@ TIMEOUT="1"
 INTERFACE_CHANGE_STATE_SLEEP="1"
 DHCP_COMPLETION_SLEEP="10"
 TRY_TO_FIX=1
+INTERACTIVE_MODE=0
+
 
 HELP="\
 Internet problem fixer\\n\
@@ -131,9 +133,6 @@ PING_SWITCHES=""
 ASSUMED_RELIABLE_IP="127.0.0.1"
 #WARNING! ASSUMED_RELIABLE_IP must be reachable via ASSUMED_AVAILABLE_INTERFACE_NAME
 ASSUMED_AVAILABLE_INTERFACE_NAME="lo"
-
-#if is zero-length will not prompt for any input, will be overwritten by handle_args()
-INTERACTIVE_MODE=""
 
 #renamed to _log to resolve conflict with abs.lib.logging
 function _log {
@@ -324,7 +323,7 @@ function check_daemon {
 
 	if ! systemctl is-active "$daemon" &>$REDIRECT_DEST;then
 			_log "${YELLOW}[!] $daemon is not running${NC}" "$_CURRENT_LOG_LVL" 
-		if [ -n "$do_prompt" ];then
+		if [[ $do_prompt -ne 0 ]];then
 			_log "start and enable?[y/N]" "$_CURRENT_LOG_LVL"
 			read -r confirm
 		fi
@@ -335,7 +334,7 @@ function check_daemon {
 			start_success=$?
 		fi
 
-		if [ -n "$do_prompt" ] && [[ $start_success -eq 0 ]];then
+		if [[ $do_prompt -ne 0 ]] && [[ $start_success -eq 0 ]];then
 			_log "${GREEN}[+] $daemon successfully started${NC}" "$_CURRENT_LOG_LVL"
 		else
 			_log "${RED}[-] failed to start $daemon ${NC}" "$_CURRENT_LOG_LVL"
@@ -348,7 +347,7 @@ function check_daemon {
 
 # check_daemon_* functions check if daemons needed for a certain feature are running or not
 # Parameters: 
-# 	do_prompt: if non-zero length then prompt the user to start and enable the daemon if not running
+# 	do_prompt: if set to 1 then prompt the user to start and enable the daemon if not running
 # Returns:
 # 	non-zero on error
 
