@@ -118,7 +118,7 @@ VERBOSE_LOG_LVL=50
 DEBUG_LOG_LVL=100
 
 
-#renamed to __CURRENT_LOG_LVL to resolve conflict with abs.lib.logging
+#renamed to _CURRENT_LOG_LVL to resolve conflict with abs.lib.logging
 _CURRENT_LOG_LVL=$DEFAULT_LOG_LVL
 
 #COMMANDNAME_SWITCHES are used along each COMMANDNAME, this is portability (to test if different switches work on current machine)
