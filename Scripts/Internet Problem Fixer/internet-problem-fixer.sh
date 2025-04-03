@@ -917,8 +917,11 @@ function main {
 		if ip addr | grep tun >$REDIRECT_DEST;then
 				_log "${YELLOW}[!] please turn off your vpn${NC}" $DEFAULT_LOG_LVL
 		fi
-		init_wifi_devs
-		init_accesspoints
+
+		if [[ $DENY_IS_WIFI -eq 0 ]];then
+			init_wifi_devs
+			init_accesspoints
+		fi
 		init_determine_target_interfaces
 		init_ping_switches
 
