@@ -5,14 +5,14 @@ source abs.lib.depcheck
 #used to push and pop IFS
 OLD_IFS=$IFS
 
-ESSENTIAL_DEPENDANCIES_CMD="\
+readonly ESSENTIAL_DEPENDANCIES_CMD="\
 inetutils-ping,ping
 iproute2,ip
 dnsutils,nslookup
 isc-dhcp-client,dhclient\
 "
 
-WIFI_DEPENDANCIES_CMD="\
+readonly WIFI_DEPENDANCIES_CMD="\
 network-manager,NetworkManager
 awesome bash scripts binary modules,abs.bin.TryToConnectToAccessPoint
 awesome bash scripts binary modules,abs.bin.NetworkManager-GetAllAccessPoints
@@ -20,11 +20,11 @@ awesome bash scripts binary modules,abs.bin.GetAllWifiDevices\
 "
 
 #terminal colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[0;33m'
+readonly BLUE='\033[0;34m'
+readonly NC='\033[0m'
 
 #runtime flags/configs
 REDIRECT_DEST="/dev/null"
@@ -36,7 +36,7 @@ TRY_TO_FIX=1
 INTERACTIVE_MODE=0
 
 
-HELP="\
+readonly HELP="\
 Internet problem fixer\\n\
 Options:\n\
 \t-v\t\t\t\tverbose\n\
@@ -59,16 +59,16 @@ Usage Examples:\n\
 
 
 #google dns primary and secondary, example.com, google.com
-INTERNET_IPV4S=("8.8.8.8" "8.8.4.4" "93.184.215.14" "142.250.184.206")
-INTERNET_DOMAINS=("google.com" "example.com" "github.com")
+readonly INTERNET_IPV4S=("8.8.8.8" "8.8.4.4" "93.184.215.14" "142.250.184.206")
+readonly INTERNET_DOMAINS=("google.com" "example.com" "github.com")
 #shecan.ir, shecan primary and secondary dns, shatel.ir
-INTRANET_IPV4S=("88.135.36.244" "178.22.122.100" "178.22.122.100" "85.15.17.13")
-INTRANET_DOMAINS=("shecan.ir" "shatel.ir")
+readonly INTRANET_IPV4S=("88.135.36.244" "178.22.122.100" "178.22.122.100" "85.15.17.13")
+readonly INTRANET_DOMAINS=("shecan.ir" "shatel.ir")
 
 
 #regex strings
-IPV4_REGEX="([[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}"
-IPV4_NETMASK_REGEX="/[[:digit:]]{1,2}"
+readonly IPV4_REGEX="([[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}"
+readonly IPV4_NETMASK_REGEX="/[[:digit:]]{1,2}"
 
 #state flags (-1 not checked 0 doesnt work 1 works )
 #is for the $CURRENT_INTERFACE
@@ -94,30 +94,30 @@ LAST_DNS_STATE=-1
 # 	-all get functions provide the list of asked interfaces with the delimiter being $INTERFACE_LIST_DELIMITER
 # 	-all switches that accept a list of interfaces as argument use the $INTERFACE_LIST_DELIMITER
 # 	-all loops in interface lists should set IFS to $INTERFACE_LIST_DELIMITER
-INTERFACE_LIST_DELIMITER=","
+readonly INTERFACE_LIST_DELIMITER=","
 #interfaces that are expected to be able to reach internet
 TARGET_INTERFACES=""
 #script runs for the first target and after the fix can run for the other
 CURRENT_INTERFACE=""
 #-x --exclude input
-DEFAULT_EXCLUDED_INTERFACES="\
+readonly DEFAULT_EXCLUDED_INTERFACES="\
 lo${INTERFACE_LIST_DELIMITER}docker0${INTERFACE_LIST_DELIMITER}neko-tun${INTERFACE_LIST_DELIMITER}tun0\
 "
 EXCLUDED_INTERFACES=""
 #-i --interface input
 INCLUDED_INTERFACES=""
 
-RELIABLE_DNS_SERVER1="8.8.8.8"
-RELIABLE_DNS_SERVER2="8.8.4.4"
+readonly RELIABLE_DNS_SERVER1="8.8.8.8"
+readonly RELIABLE_DNS_SERVER2="8.8.4.4"
 
 #used to seperate the output of some function from another
-LINE_DELIMITER="--------------------------"
+readonly LINE_DELIMITER="--------------------------"
 
 #_log levels
 #10-40 and 60-90 are reserved for the future use
-DEFAULT_LOG_LVL=0
-VERBOSE_LOG_LVL=50
-DEBUG_LOG_LVL=100
+readonly DEFAULT_LOG_LVL=0
+readonly VERBOSE_LOG_LVL=50
+readonly DEBUG_LOG_LVL=100
 
 
 #renamed to _CURRENT_LOG_LVL to resolve conflict with abs.lib.logging
@@ -130,9 +130,9 @@ _CURRENT_LOG_LVL=$DEFAULT_LOG_LVL
 PING_SWITCHES=""
 
 #assumed global variables typically to test things when an actual valid one is not availbale
-ASSUMED_RELIABLE_IP="127.0.0.1"
+readonly ASSUMED_RELIABLE_IP="127.0.0.1"
 #WARNING! ASSUMED_RELIABLE_IP must be reachable via ASSUMED_AVAILABLE_INTERFACE_NAME
-ASSUMED_AVAILABLE_INTERFACE_NAME="lo"
+readonly ASSUMED_AVAILABLE_INTERFACE_NAME="lo"
 
 #renamed to _log to resolve conflict with abs.lib.logging
 function _log {
@@ -743,14 +743,14 @@ function init_ping_switches {
 
 #start of wifi support 
 
-WIFI_DEV_PROPERTY_DELIM=","
-WIFI_DEVS_DELIM=$'\n'
+readonly WIFI_DEV_PROPERTY_DELIM=","
+readonly WIFI_DEVS_DELIM=$'\n'
 #NetworkManager device path,interface name
 WIFI_DEVS=""
 
 
-ACCESSPOINT_PROPERTY_DELIM=","
-ACCESSPOINTS_DELIM=$'\n'
+readonly ACCESSPOINT_PROPERTY_DELIM=","
+readonly ACCESSPOINTS_DELIM=$'\n'
 #NetworkManager device path,SSID,wpaflags
 ACCESSPOINTS=""
 
