@@ -136,13 +136,13 @@ ASSUMED_AVAILABLE_INTERFACE_NAME="lo"
 
 #renamed to _log to resolve conflict with abs.lib.logging
 function _log {
- 	string="$1"
-	_log_level="$2"
+	local string="$1"
+	local _log_level="$2"
 	
 	
 	#should be dynamic based on the switches
 	#like a user sometimes wants to send all of errors over a socket(s) and have the states shown in a terminal
-	dest=1
+	local dest=1
 
 	if [[ $_CURRENT_LOG_LVL -ge $_log_level ]];then
 			echo -e "$string">&$dest
@@ -161,19 +161,19 @@ function get_interfaces_with_default_gw {
 
 function get_default_gws_of_interface {
 #default gateways of interface
-		interface_name="$1"
+		local interface_name="$1"
 		ip route | grep -E "^default" | grep "$interface_name" | grep -o -E "$IPV4_REGEX" | tr $'\n' ' '
 }
 
 function get_interface_ipv4s {
-		interface_name="$1"
+		local interface_name="$1"
 		ip -o addr | grep -E "^[[:digit:]]+: $interface_name" | grep -o -E "$IPV4_REGEX$IPV4_NETMASK_REGEX" | cut -f1 -d "/" | tr $'\n' ' '
 }
 
 
 function check_internet_connectivity {
-		interface_name="$1"
-		ping_dest=""
+		local interface_name="$1"
+		local ping_dest=""
 		if [[ $DNS_STATE = 1 ]];then
 				ping_dest="${INTERNET_DOMAINS[@]}"
 		else
@@ -204,8 +204,8 @@ function check_internet_connectivity {
 		return 1
 }
 function check_intranet_connectivity {
-		interface_name="$1"
-		ping_dest=""
+		local interface_name="$1"
+		local ping_dest=""
 		if [[ $DNS_STATE = 1 ]];then
 				ping_dest="${INTRANET_DOMAINS[@]}"
 		else
@@ -235,7 +235,8 @@ function check_intranet_connectivity {
 } 
 function check_lan_connectivity {
 #ping default gateway
-		interface_name="$1"
+		local interface_name="$1"
+		local default_gws
 		default_gws=$(get_default_gws_of_interface "$interface_name")
 
 		_log "${BLUE}[*] checking LAN connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
@@ -266,7 +267,7 @@ function check_dns {
 #need to check what dns client is present and use that
 #so this function need to call one of the check_dns_nslookup, check_dns_host, check_dns_dig, etc
 		#is not used currently
-		interface_name="$1"
+		local interface_name="$1"
 
 		_log "${BLUE}[*] checking DNS${NC}" $VERBOSE_LOG_LVL
 
@@ -292,7 +293,8 @@ function check_dns {
 }
 
 function check_interface_self_connectivity {
-		interface_name="$1"
+		local interface_name="$1"
+		local interface_ips
 		interface_ips=$(get_interface_ipv4s "$interface_name")
 		
 		_log "${BLUE}[*] checking interface self connectivity for $interface_name${NC}" $VERBOSE_LOG_LVL
@@ -317,9 +319,9 @@ function check_interface_self_connectivity {
 }
 
 function check_daemon {
-	daemon="$1"
+	local daemon="$1"
 	local do_prompt="$2"
-	confirm='n'
+	local confirm='n'
 
 	if ! systemctl is-active "$daemon" &>$REDIRECT_DEST;then
 			_log "${YELLOW}[!] $daemon is not running${NC}" "$_CURRENT_LOG_LVL" 
@@ -353,10 +355,10 @@ function check_daemon {
 
 # checks for NetworkManager, iwd || wpa_supplicant
 function check_daemon_wireless_support {
-	do_prompt="$1"
+	local do_prompt="$1"
 
 	check_daemon "NetworkManager" "$do_prompt"
-	networkmanager_status=$?
+	local networkmanager_status=$?
 	
 	if [[ $networkmanager_status -ne 0 ]];then
 		_log "networkmanager_status=$networkmanager_status" "$DEBUG_LOG_LVL"
@@ -371,10 +373,10 @@ function check_daemon_wireless_support {
 	# 	 - if non of them are active we try to start only one of them
 	#output of the following two check_daemon's will be shown when we determine which of them are installed
 	check_daemon "iwd" "" >/dev/null
-	iwd_status=$?
+	local iwd_status=$?
 
 	check_daemon "wpa_supplicant" "" >/dev/null
-	wpa_supplicant_status=$?
+	local wpa_supplicant_status=$?
 
 	#if both are non-zero, then both failed (errcode != 0)
 	if ((iwd_status && wpa_supplicant_status));then
@@ -400,8 +402,8 @@ function check_daemon_wireless_support {
 }
 
 function echo_state {
-		state="$1"
-		msg="$2"
+		local state="$1"
+		local msg="$2"
 
 		#interface
 		if [[ $state = 1 ]];then
@@ -416,12 +418,12 @@ function echo_state {
 }
 
 function echo_network_states {
-		INTERFACE_MSG="network interface"
-		PRIVATE_IP_MSG="private ip usability"
-		LAN_MSG="LAN reachability"
-		DNS_MSG="DNS ( not currently interface dependent )"
-		INTRANET_MSG="Intranet reachability"
-		INTERNET_MSG="Internet reachability"
+		local INTERFACE_MSG="network interface"
+		local PRIVATE_IP_MSG="private ip usability"
+		local LAN_MSG="LAN reachability"
+		local DNS_MSG="DNS ( not currently interface dependent )"
+		local INTRANET_MSG="Intranet reachability"
+		local INTERNET_MSG="Internet reachability"
 
 		_log "${YELLOW}$LINE_DELIMITER${NC}" $DEFAULT_LOG_LVL
 		_log "current network stats of $CURRENT_INTERFACE:" $DEFAULT_LOG_LVL
@@ -448,7 +450,7 @@ function echo_network_states {
 }
 
 function set_network_states {
-		value=$1
+		local value=$1
 
 		INTERFACE_STATE=$value
 		PRIVATE_IP_MSG=$value
@@ -459,7 +461,7 @@ function set_network_states {
 }
 
 function check_all_on_interface {
-		interface_name="$1"
+		local interface_name="$1"
 		check_interface_self_connectivity "$interface_name"
 		errno=$?
 		if [[ $errno != 0 ]];then
@@ -493,7 +495,7 @@ function check_all_on_interface {
 function restart_interface {
 
 		
-		interface_name="$1"
+		local interface_name="$1"
 		_log "${BLUE}[*] restarting interface $interface_name${NC}" $VERBOSE_LOG_LVL
 		sudo ip link set "$interface_name" "down"
 		errno=$?
@@ -515,7 +517,7 @@ function restart_interface {
 
 function dhcp_renew {
 		
-		interface_name="$1"
+		local interface_name="$1"
 		_log "${BLUE}[*] renewing ip of $interface_name${NC}" $VERBOSE_LOG_LVL
 		sudo dhclient -r "$interface_name">&$REDIRECT_DEST
 		errno=$?
@@ -536,7 +538,7 @@ function dhcp_renew {
 
 function restart_and_renew_interface {
 #this exist because we may need to set other attributes too, like mtu, ttl
-		interface_name="$1"
+		local interface_name="$1"
 		restart_interface "$interface_name"
 		dhcp_renew "$interface_name"
 }
@@ -562,7 +564,7 @@ function set_reliable_dns {
 }
 
 function try_to_fix_interface_wired {
-		interface_name="$1"
+		local interface_name="$1"
 
 		if [[ $INTERFACE_STATE = 0 ]];then
 				_log "${BLUE}[*] restarting interface $interface_name${NC}" $VERBOSE_LOG_LVL
@@ -671,15 +673,15 @@ function update_last_network_states {
 }
 
 function scape_sed_special_chars {
-		string_to_scape="$1"
+		local string_to_scape="$1"
 		echo "$(<<<"$string_to_scape" sed -e 's`[][\\/.*^$]`\\&`g')"
 }
 
 function remove_list_from_list {
-		list="$1"
-		delimiter_of_list="$2"
-		remove_list="$3"
-		delimiter_of_remove_list="$4"
+		local list="$1"
+		local delimiter_of_list="$2"
+		local remove_list="$3"
+		local delimiter_of_remove_list="$4"
 
 		if [ -z "$remove_list" ];then
 				echo "$list"
@@ -764,7 +766,7 @@ function init_accesspoints {
 	_log "${BLUE}[*] found accesspoints:${NC}" $VERBOSE_LOG_LVL
 	_log "${BLUE}[*] $ACCESSPOINTS:${NC}" $VERBOSE_LOG_LVL
 
-	found_ap_ssids=""
+	local found_ap_ssids=""
 
 	IFS="$OLD_IFS"
 	IFS="$ACCESSPOINTS_DELIM"
@@ -775,18 +777,18 @@ function init_accesspoints {
 }
 
 function get_wifi_dev_interface_name {
-	wifi_dev="$1"
+	local wifi_dev="$1"
 	echo "$wifi_dev" | cut -f 2 -d "$WIFI_DEV_PROPERTY_DELIM"
 }
 
 function get_wifi_dev_path {
-	wifi_dev="$1"
+	local wifi_dev="$1"
 	echo "$wifi_dev" | cut -f 1 -d "$WIFI_DEV_PROPERTY_DELIM"
 }
 
 #nothing will be echoed if no device matches, it's responsibility of the caller to make sure the interface is wifi
 function get_wifi_dev_from_interface_name {
-	interface_name="$1"
+	local interface_name="$1"
 
 	OLD_IFS="$IFS"
 	IFS="$WIFI_DEVS_DELIM"
@@ -804,7 +806,7 @@ function is_wifi {
 	if [[ $DENY_IS_WIFI -ne 0 ]];then
 		return 1
 	fi
-	interface_name="$1"
+	local interface_name="$1"
 
 	errno=1
 
@@ -821,19 +823,19 @@ function is_wifi {
 }
 
 function get_accesspoint_path {
-	accesspoint="$1"
+	local accesspoint="$1"
 	echo "$accesspoint" | cut -f 1 -d "$ACCESSPOINT_PROPERTY_DELIM"
 }
 
 
 function get_accesspoint_ssid {
-	accesspoint="$1"
+	local accesspoint="$1"
 	echo "$accesspoint" | cut -f 2 -d "$ACCESSPOINT_PROPERTY_DELIM"
 }
 
 
 function try_to_fix_interface_wireless {
-	interface_name="$1"
+	local interface_name="$1"
 	
 	errno=1
 
@@ -841,6 +843,7 @@ function try_to_fix_interface_wireless {
 	IFS="$ACCESSPOINTS_DELIM"
 	#try to connect to each accesspoint, if internet was availbale stop
 	for accesspoint in $ACCESSPOINTS;do
+		local device
 		device="$(get_wifi_dev_from_interface_name "$interface_name")"
 		abs.bin.TryToConnectToAccessPoint \
 			--accesspoint_path $(get_accesspoint_path "$accesspoint" 2>/dev/null)\
@@ -868,7 +871,7 @@ function try_to_fix_interface_wireless {
 
 
 function try_to_fix_interface {
-	interface_name="$1"
+	local interface_name="$1"
 
 	if is_wifi "$interface_name";then
 		try_to_fix_interface_wireless "$interface_name"
@@ -901,9 +904,9 @@ function main {
 		fi
 
 		depcheck_cmd_fromstr "$WIFI_DEPENDANCIES_CMD"
-		wifi_dependancies_met=$?
+		local wifi_dependancies_met=$?
 		check_daemon_wireless_support $INTERACTIVE_MODE
-		wifi_daemons_running=$?
+		local wifi_daemons_running=$?
 
 		if ((wifi_dependancies_met || wifi_daemons_running));then
 			DENY_IS_WIFI=1
