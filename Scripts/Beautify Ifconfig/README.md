@@ -3,4 +3,4 @@ Display of available network interfaces next to IP, netmask and flags related to
 ## Usage
 `chmod +x bifconfig.sh`
 
-`./ifconfig.sh`
+`./bifconfig.sh`
