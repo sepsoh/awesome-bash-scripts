@@ -1,0 +1,16 @@
+github.com/Wifx/gonetworkmanager v0.5.0 h1:P209z0yj705bl5tmyHTlpXPSv3QzjPtIM4X0SyDAqWA=
+github.com/Wifx/gonetworkmanager v0.5.0/go.mod h1:EdhHf2O00IZXfMv9LC6CS6SgTwcMTg/ZSDhGvch0cs8=
+github.com/Wifx/gonetworkmanager/v3 v3.0.0 h1:NBemr7aUazAKSQ6dEGzLcVJ00UT6U0b/iTgecOdUo1M=
+github.com/Wifx/gonetworkmanager/v3 v3.0.0/go.mod h1:JPAftRDTjp5o37GNOYytCzerFU8ZjudV/jC/g41kvHE=
+github.com/alexflint/go-arg v1.5.1 h1:nBuWUCpuRy0snAG+uIJ6N0UvYxpxA0/ghA/AaHxlT8Y=
+github.com/alexflint/go-arg v1.5.1/go.mod h1:A7vTJzvjoaSTypg4biM5uYNTkJ27SkNTArtYXnlqVO8=
+github.com/alexflint/go-scalar v1.2.0 h1:WR7JPKkeNpnYIOfHRa7ivM21aWAdHD0gEWHCx+WQBRw=
+github.com/alexflint/go-scalar v1.2.0/go.mod h1:LoFvNMqS1CPrMVltza4LvnGKhaSpc3oyLEBUZVhhS2o=
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/godbus/dbus/v5 v5.0.2 h1:QtWdZQyXTEn7S0LXv9nVxPUiT37d1i7UntpRTiKM86E=
+github.com/godbus/dbus/v5 v5.0.2/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
+github.com/godbus/dbus/v5 v5.1.0 h1:4KLkAxT3aOY8Li4FRJe/KvhoNFFxo0m6fNuFUO8QJUk=
+github.com/godbus/dbus/v5 v5.1.0/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
