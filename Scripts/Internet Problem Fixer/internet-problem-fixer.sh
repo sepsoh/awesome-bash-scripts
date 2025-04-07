@@ -42,7 +42,7 @@ Options:\n\
 \t-v\t\t\t\tverbose\n\
 \t-d\t\t\t\tdebug: redirect the used commands to stdout\n\
 \t-n\t\t\t\tno fix: don't try to fix ( eliminate the requirement for the script to be root )\n\
-\t-i INTERFACE_NAMES\t\tinclude interface: troubleshoot the provided interfaces only if used. -x will be ignored\n\
+\t-i INTERFACE_NAMES\t\tinclude interface: troubleshoot the provided interfaces only. if used, -x will be ignored\n\
 \t-I \t\t\t\tinteractive mode: if not set user won't be asked for input and will not be prompted for anything\n\
 \t-x INTERFACE_NAMES\t\texclude interface: ignore the provided interfaces\n\
 \t-p PING_OPTION=VALUE,..\t\tpass arbitrary switches to pings used in the script, seperated by ',' and wrappen in double qoutes '\"'\n\
