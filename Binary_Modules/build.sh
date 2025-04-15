@@ -6,7 +6,7 @@ for dir in $(ls -F | grep '/' | grep -v -E "$exception_dirs"); do
 
 	expected_bin_name=$(pwd | sed -e 's/.*\///')
 
-	go build ${expected_bin_name}.go
+	go build -ldflags "-s -w" ${expected_bin_name}.go
 	if [ "$?" != "0" ];then
 		exit 1
 	fi
